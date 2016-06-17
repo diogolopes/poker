@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+	<logger name="com.vaadin.server.communication" level="ERROR" />
+	<logger name="org.springframework" level="ERROR" />
+	<logger name="freemarker.cache" level="ERROR" />
+	<logger name="ch.qos.logback" level="ERROR" />	
+	<logger name="bitronix.tm" level="ERROR" />
+	<logger name="com.netflix" level="ERROR" />
+	<logger name="org.apache" level="ERROR" />
+	<logger name="org.apache" level="ERROR" />
+	<logger name="org.jboss" level="ERROR" />	
+	<logger name="org.xnio" level="ERROR" />
+	<logger name="/" level="ERROR" />
+
+	<if condition='property("logging.appender").equalsIgnoreCase("FILE")'>
+		<then>
+			<appender name="FILE"
+				class="ch.qos.logback.core.rolling.RollingFileAppender">
+				<file>${logging.destination}/${logging.file.name}.log</file>
+				<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+					<fileNamePattern>${logging.destination}/${logging.file.name}.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+					<timeBasedFileNamingAndTriggeringPolicy
+						class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+						<maxFileSize>${logging.file.max-size}</maxFileSize>
+					</timeBasedFileNamingAndTriggeringPolicy>			
+					<cleanHistoryOnStart>true</cleanHistoryOnStart>
+					<maxHistory>${logging.file.max-history}</maxHistory>
+				</rollingPolicy>
+				<encoder>
+					<pattern>
+						%date [%thread] %-5level %logger - %msg\n
+					</pattern>
+				</encoder>
+			</appender>	
+
+			<root level="${logging.level}">
+				<appender-ref ref="${logging.appender}" />
+			</root>
+		</then>
+		<else>
+			<if condition='isNull("logging.level")'>
+				<then>
+					<property name="logging.ilevel" value="INFO" />
+				</then>
+				<else>
+					<property name="logging.ilevel" value="${logging.level}" />
+				</else>
+			</if>
+			<property name="logging.appender" value="STDOUT" />
+
+			<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+				<encoder>
+					<pattern>%-5level %logger - %msg\n</pattern>
+				</encoder>
+			</appender>
+
+			<root level="${logging.ilevel}">
+				<appender-ref ref="${logging.appender}" />
+			</root>
+		</else>
+	</if>
+</configuration>
