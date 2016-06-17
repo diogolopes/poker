@@ -4,6 +4,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.Set;
 
 import org.junit.Before;
@@ -65,9 +66,14 @@ public class PartidaRepositoryTest {
     }
 
     @Test
-    public void findByNomeTest() {
+    public void findByDataTest() {
         final Set<Partida> partidas = repository.findByData(EPartida.CASA_MAEDA.getData());
         assertThat("Objeto não encontrado", partidas.size(), equalTo(1));
     }
 
+    @Test
+    public void findByDataBetweenTest() {
+        final Set<Partida> partidas = repository.findByDataBetween(LocalDate.of(2016, 1, 1), LocalDate.of(2016, 12, 31));
+        assertThat("Objeto não encontrado", partidas.size(), equalTo(1));
+    }
 }

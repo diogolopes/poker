@@ -12,7 +12,6 @@ import javax.persistence.Transient;
 import javax.persistence.Version;
 
 import org.springframework.data.domain.Persistable;
-import org.springframework.data.jpa.domain.AbstractPersistable;
 import org.springframework.util.ClassUtils;
 
 @MappedSuperclass

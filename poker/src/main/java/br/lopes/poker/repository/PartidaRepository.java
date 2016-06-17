@@ -10,5 +10,7 @@ import br.lopes.poker.domain.Partida;
 public interface PartidaRepository extends JpaRepository<Partida, Integer> {
 
     Set<Partida> findByData(final LocalDate data);
+    
+    Set<Partida> findByDataBetween(final LocalDate begin, final LocalDate end);
 
 }
