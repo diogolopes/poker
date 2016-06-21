@@ -15,7 +15,10 @@ public class Ranking extends AbstractEntity<Integer> {
 	private static final long serialVersionUID = -7229048611382540986L;
 
 	@Column(nullable = false)
-	private LocalDate data;
+	private Integer ano;
+
+	@Column(nullable = false)
+	private LocalDate dataAtualizacao;
 
 	@OneToMany(cascade = CascadeType.ALL, mappedBy = "ranking")
 	private final Set<Colocacao> colocacoes = new HashSet<>();
@@ -24,18 +27,26 @@ public class Ranking extends AbstractEntity<Integer> {
 		return colocacoes;
 	}
 
-	public LocalDate getData() {
-		return data;
+	public LocalDate getDataAtualizacao() {
+		return dataAtualizacao;
 	}
 
-	public void setData(final LocalDate data) {
-		this.data = data;
+	public void setDataAtualizacao(final LocalDate data) {
+		this.dataAtualizacao = data;
 	}
 
 	public void addColocacao(final Colocacao colocacao) {
 		this.colocacoes.add(colocacao);
 		colocacao.setRanking(this);
 
+	}
+
+	public Integer getAno() {
+		return ano;
+	}
+
+	public void setAno(Integer ano) {
+		this.ano = ano;
 	}
 
 }

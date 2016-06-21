@@ -20,7 +20,7 @@ public class RankingFaker {
 
 	public static Ranking get(final ERanking eRanking) {
 		final Ranking ranking = new Ranking();
-		ranking.setData(eRanking.data);
+		ranking.setDataAtualizacao(eRanking.data);
 		return ranking;
 	}
 }

@@ -6,7 +6,7 @@ import java.math.MathContext;
 import br.lopes.poker.domain.PartidaPessoa;
 import br.lopes.poker.domain.Pessoa;
 
-public class Ranking {
+public class Classificacao {
     private Pessoa pessoa;
     private BigDecimal saldo = BigDecimal.ZERO;
     private int jogos;
@@ -17,7 +17,7 @@ public class Ranking {
     private int posicaoAnterior;
     private int movimentacao;
 
-    public Ranking(final PartidaPessoa partidaPessoa) {
+    public Classificacao(final PartidaPessoa partidaPessoa) {
         this.pessoa = partidaPessoa.getPessoa();
     }
 
@@ -105,7 +105,7 @@ public class Ranking {
             return false;
         if (getClass() != obj.getClass())
             return false;
-        Ranking other = (Ranking) obj;
+        Classificacao other = (Classificacao) obj;
         if (pessoa == null) {
             if (other.pessoa != null)
                 return false;

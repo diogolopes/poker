@@ -21,7 +21,7 @@ public class RankingBuilder {
 	}
 
 	public RankingBuilder withData(final LocalDate data) {
-		this.ranking.setData(data);
+		this.ranking.setDataAtualizacao(data);
 		return this;
 	}
 
