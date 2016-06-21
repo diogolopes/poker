@@ -49,11 +49,11 @@ public class Partida extends AbstractEntity<Integer> {
         }
     }
 
-    public void addPessoa(final Pessoa pessoa, final int rebuys, final BigDecimal saldo) {
+    public void addPessoa(final Pessoa pessoa, final BigDecimal saldo, final BigDecimal bonus) {
         final PartidaPessoa partidaPessoa = new PartidaPessoa();
         partidaPessoa.setPartida(this);
         partidaPessoa.setPessoa(pessoa);
-        partidaPessoa.setRebuys(rebuys);
+        partidaPessoa.setBonus(bonus);
         partidaPessoa.setSaldo(saldo);
 
         this.partidaPessoas.add(partidaPessoa);

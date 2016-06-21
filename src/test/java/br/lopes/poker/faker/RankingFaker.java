@@ -6,21 +6,24 @@ import br.lopes.poker.domain.Ranking;
 
 public class RankingFaker {
 
-	public enum ERanking {
-		HOJE(LocalDate.now()), //
-		MAIO(LocalDate.of(2016, 05, 10)), //
-		ABRIL(LocalDate.of(2016, 04, 10));
+    public enum ERanking {
+        HOJE(2016, LocalDate.now()), //
+        MAIO(2016, LocalDate.of(2016, 05, 10)), //
+        ABRIL(2016, LocalDate.of(2016, 04, 10));
 
-		private final LocalDate data;
+        private final int ano;
+        private final LocalDate data;
 
-		private ERanking(final LocalDate data) {
-			this.data = data;
-		}
-	}
+        private ERanking(final int ano, final LocalDate data) {
+            this.ano = ano;
+            this.data = data;
+        }
+    }
 
-	public static Ranking get(final ERanking eRanking) {
-		final Ranking ranking = new Ranking();
-		ranking.setDataAtualizacao(eRanking.data);
-		return ranking;
-	}
+    public static Ranking get(final ERanking eRanking) {
+        final Ranking ranking = new Ranking();
+        ranking.setAno(eRanking.ano);
+        ranking.setDataAtualizacao(eRanking.data);
+        return ranking;
+    }
 }

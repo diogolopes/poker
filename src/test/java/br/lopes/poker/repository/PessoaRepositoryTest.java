@@ -58,7 +58,7 @@ public class PessoaRepositoryTest {
 
         assertThat("Base de dados nao esta vazia", 0l, equalTo(count));
 
-        final Pessoa pessoa = PessoaBuilder.get(EPessoa.DIOGO).withPartidaPessoa(EPartida.CASA_SONIA, 2, "35").build();
+        final Pessoa pessoa = PessoaBuilder.get(EPessoa.DIOGO).withPartidaPessoa(EPartida.CASA_SONIA, 35, 1).build();
 
         // Manual flush is required to avoid false positive in test
         repository.saveAndFlush(pessoa);

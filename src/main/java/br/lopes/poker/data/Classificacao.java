@@ -3,6 +3,7 @@ package br.lopes.poker.data;
 import java.math.BigDecimal;
 import java.math.MathContext;
 
+import br.lopes.poker.domain.Colocacao;
 import br.lopes.poker.domain.PartidaPessoa;
 import br.lopes.poker.domain.Pessoa;
 
@@ -19,6 +20,18 @@ public class Classificacao {
 
     public Classificacao(final PartidaPessoa partidaPessoa) {
         this.pessoa = partidaPessoa.getPessoa();
+    }
+
+    public Classificacao(final Colocacao colocacao) {
+        this.pessoa = colocacao.getPessoa();
+        this.saldo = colocacao.getSaldo();
+        this.jogos = colocacao.getJogos();
+        this.vitoria = colocacao.getVitoria();
+        this.empate = colocacao.getEmpate();
+        this.derrota = colocacao.getDerrota();
+        this.posicaoAtual = colocacao.getPosicaoAtual();
+        this.posicaoAnterior = colocacao.getPosicaoAnterior();
+        this.movimentacao = (this.posicaoAnterior != 0) ? (this.posicaoAnterior - this.posicaoAtual) : 0;
     }
 
     public Pessoa getPessoa() {
@@ -74,7 +87,7 @@ public class Classificacao {
     }
 
     public void update(final PartidaPessoa partidaPessoa) {
-        this.saldo = saldo.add(partidaPessoa.getSaldo());
+        this.saldo = saldo.add(partidaPessoa.getSaldo()).add(partidaPessoa.getBonus());
         this.jogos++;
         final int compareTo = saldo.compareTo(BigDecimal.ZERO);
         this.vitoria = (compareTo == 1) ? vitoria + 1 : vitoria;

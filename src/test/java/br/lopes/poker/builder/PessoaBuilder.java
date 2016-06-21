@@ -35,8 +35,8 @@ public class PessoaBuilder {
         return this;
     }
 
-    public PessoaBuilder withPartidaPessoa(final EPartida ePartida, final int rebuys, final String saldo) {
-        this.pessoa.addPartida(PartidaFaker.get(ePartida), rebuys, new BigDecimal(saldo));
+    public PessoaBuilder withPartidaPessoa(final EPartida ePartida, final double saldo, final double bonus) {
+        this.pessoa.addPartida(PartidaFaker.get(ePartida), new BigDecimal(saldo), new BigDecimal(bonus));
         return this;
     }
 

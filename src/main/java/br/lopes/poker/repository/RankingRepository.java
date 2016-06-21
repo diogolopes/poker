@@ -6,4 +6,6 @@ import br.lopes.poker.domain.Ranking;
 
 public interface RankingRepository extends JpaRepository<Ranking, Integer> {
 
+    Ranking findByAno(final int ano);
+
 }

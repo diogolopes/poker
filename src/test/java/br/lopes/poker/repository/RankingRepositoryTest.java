@@ -38,7 +38,7 @@ public class RankingRepositoryTest {
 	private DDLValidator ddlValidator;
 
 	private static final String TB_RANKING = "Ranking";
-	private static final String[] TB_RANKING_COLUMNS = new String[] { "id", "version", "data" };
+	private static final String[] TB_RANKING_COLUMNS = new String[] { "id", "version", "ano", "dataAtualizacao" };
 	private static final String[] TB_RANKING_PKS = new String[] { "id" };
 	private static final String[] TB_RANKING_FKS = new String[] {};
 

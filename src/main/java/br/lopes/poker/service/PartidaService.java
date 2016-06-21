@@ -1,5 +1,7 @@
 package br.lopes.poker.service;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 import br.lopes.poker.domain.Partida;
@@ -7,4 +9,6 @@ import br.lopes.poker.domain.Partida;
 public interface PartidaService {
 
     Set<Partida> findByYear(final int year);
+
+    List<Partida> save(final Collection<Partida> partidas);
 }

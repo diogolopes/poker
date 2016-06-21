@@ -18,14 +18,14 @@ public class PartidaPessoa extends AbstractEntity<Integer> {
             nullable = false)
     private Partida partida;
 
-    @ManyToOne(cascade = CascadeType.ALL,
+    @ManyToOne(cascade = { CascadeType.MERGE, CascadeType.DETACH, CascadeType.REFRESH, CascadeType.REMOVE },
             optional = false)
     @JoinColumn(name = "pessoaId",
             nullable = false)
     private Pessoa pessoa;
 
-    private int rebuys;
     private BigDecimal saldo;
+    private BigDecimal bonus;
 
     public Partida getPartida() {
         return partida;
@@ -41,14 +41,6 @@ public class PartidaPessoa extends AbstractEntity<Integer> {
 
     public void setPessoa(final Pessoa pessoa) {
         this.pessoa = pessoa;
-    }
-
-    public int getRebuys() {
-        return rebuys;
-    }
-
-    public void setRebuys(final int rebuys) {
-        this.rebuys = rebuys;
     }
 
     public BigDecimal getSaldo() {
@@ -69,26 +61,40 @@ public class PartidaPessoa extends AbstractEntity<Integer> {
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj)
+    public boolean equals(final Object obj) {
+        if (this == obj) {
             return true;
-        if (!super.equals(obj))
+        }
+        if (!super.equals(obj)) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
-        PartidaPessoa other = (PartidaPessoa) obj;
+        }
+        final PartidaPessoa other = (PartidaPessoa) obj;
         if (partida == null) {
-            if (other.partida != null)
+            if (other.partida != null) {
                 return false;
-        } else if (!partida.equals(other.partida))
+            }
+        } else if (!partida.equals(other.partida)) {
             return false;
+        }
         if (pessoa == null) {
-            if (other.pessoa != null)
+            if (other.pessoa != null) {
                 return false;
-        } else if (!pessoa.equals(other.pessoa))
+            }
+        } else if (!pessoa.equals(other.pessoa)) {
             return false;
+        }
         return true;
     }
 
-    
+    public BigDecimal getBonus() {
+        return bonus;
+    }
+
+    public void setBonus(final BigDecimal bonus) {
+        this.bonus = bonus;
+    }
+
 }

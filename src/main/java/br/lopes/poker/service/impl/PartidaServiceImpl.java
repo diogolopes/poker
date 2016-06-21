@@ -1,6 +1,8 @@
 package br.lopes.poker.service.impl;
 
 import java.time.LocalDate;
+import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,5 +25,10 @@ public class PartidaServiceImpl implements PartidaService {
     @Override
     public Set<Partida> findByYear(int year) {
         return repository.findByDataBetween(LocalDate.of(year, 1, 1), LocalDate.of(year, 12, 31));
+    }
+
+    @Override
+    public List<Partida> save(final Collection<Partida> partidas) {
+        return repository.save(partidas);
     }
 }

@@ -3,6 +3,7 @@ package br.lopes.poker.domain;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -12,41 +13,49 @@ import javax.persistence.OneToMany;
 @Entity
 public class Ranking extends AbstractEntity<Integer> {
 
-	private static final long serialVersionUID = -7229048611382540986L;
+    private static final long serialVersionUID = -7229048611382540986L;
 
-	@Column(nullable = false)
-	private Integer ano;
+    @Column(nullable = false)
+    private Integer ano;
 
-	@Column(nullable = false)
-	private LocalDate dataAtualizacao;
+    @Column(nullable = false)
+    private LocalDate dataAtualizacao;
 
-	@OneToMany(cascade = CascadeType.ALL, mappedBy = "ranking")
-	private final Set<Colocacao> colocacoes = new HashSet<>();
+    @OneToMany(cascade = CascadeType.ALL,
+            mappedBy = "ranking")
+    private final Set<Colocacao> colocacoes = new HashSet<>();
 
-	public Set<Colocacao> getColocacoes() {
-		return colocacoes;
-	}
+    public Set<Colocacao> getColocacoes() {
+        return colocacoes;
+    }
 
-	public LocalDate getDataAtualizacao() {
-		return dataAtualizacao;
-	}
+    public LocalDate getDataAtualizacao() {
+        return dataAtualizacao;
+    }
 
-	public void setDataAtualizacao(final LocalDate data) {
-		this.dataAtualizacao = data;
-	}
+    public void setDataAtualizacao(final LocalDate data) {
+        this.dataAtualizacao = data;
+    }
 
-	public void addColocacao(final Colocacao colocacao) {
-		this.colocacoes.add(colocacao);
-		colocacao.setRanking(this);
+    public void addColocacao(final Colocacao colocacao) {
+        this.colocacoes.add(colocacao);
+        colocacao.setRanking(this);
+    }
 
-	}
+    public void addAllColocacao(final Set<Colocacao> colocacoes) {
+        final Stream<Colocacao> stream = colocacoes.stream();
+        stream.forEach(consumer -> {
+            consumer.setRanking(this);
+            this.colocacoes.add(consumer);
+        });
+    }
 
-	public Integer getAno() {
-		return ano;
-	}
+    public Integer getAno() {
+        return ano;
+    }
 
-	public void setAno(Integer ano) {
-		this.ano = ano;
-	}
+    public void setAno(Integer ano) {
+        this.ano = ano;
+    }
 
 }

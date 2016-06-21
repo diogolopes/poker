@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Configuration;
 
 import br.lopes.poker.repository.PartidaRepository;
 import br.lopes.poker.repository.PessoaRepository;
+import br.lopes.poker.repository.RankingRepository;
 
 @Configuration
 @ComponentScan(basePackages = "br.lopes.poker.service")
@@ -22,4 +23,10 @@ public class ServiceTestConfig {
     public PartidaRepository partidaRepository() {
         return mock(PartidaRepository.class);
     }
+
+    @Bean
+    public RankingRepository rankingRepository() {
+        return mock(RankingRepository.class);
+    }
+
 }

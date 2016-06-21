@@ -7,9 +7,15 @@ import java.util.Set;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.Index;
 import javax.persistence.OneToMany;
+import javax.persistence.Table;
 
 @Entity
+@Table(indexes = { //
+        @Index(name = "idx_pessoa_nome",
+                columnList = "nome") } //
+) //
 public class Pessoa extends AbstractEntity<Integer> {
 
     private static final long serialVersionUID = -3519792787295875731L;
@@ -59,11 +65,11 @@ public class Pessoa extends AbstractEntity<Integer> {
         }
     }
 
-    public void addPartida(final Partida partida, final int rebuys, final BigDecimal saldo) {
+    public void addPartida(final Partida partida, final BigDecimal saldo, final BigDecimal bonus) {
         final PartidaPessoa partidaPessoa = new PartidaPessoa();
         partidaPessoa.setPartida(partida);
         partidaPessoa.setPessoa(this);
-        partidaPessoa.setRebuys(rebuys);
+        partidaPessoa.setBonus(bonus);
         partidaPessoa.setSaldo(saldo);
 
         this.partidaPessoas.add(partidaPessoa);
