@@ -36,7 +36,7 @@ import br.lopes.poker.service.RankingService;
 @Service
 public class ImportRankingImpl implements ImportRanking {
     private static final Logger LOGGER = org.slf4j.LoggerFactory.getLogger(ImportRankingImpl.class);
-    private static final String RANKING_FOLDER = "c:/poker/ranking/inicial";
+    private static final String RANKING_FOLDER = "c:/poker/ranking/entrada";
     private static final String RANKING_BACKUP_FOLDER = "c:/poker/ranking/backup";
 
     @Autowired
