@@ -1,7 +1,6 @@
 package br.lopes.poker.service.impl;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -10,6 +9,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.poi.EncryptedDocumentException;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.Cell;
@@ -40,6 +41,8 @@ import org.springframework.util.StringUtils;
 import br.lopes.poker.data.Saldo;
 import br.lopes.poker.domain.Partida;
 import br.lopes.poker.domain.Pessoa;
+import br.lopes.poker.helper.PokerPaths;
+import br.lopes.poker.helper.Validator;
 import br.lopes.poker.service.ImportPartida;
 import br.lopes.poker.service.PartidaService;
 import br.lopes.poker.service.PessoaService;
@@ -47,9 +50,6 @@ import br.lopes.poker.service.PessoaService;
 @Service
 public class ImportPartidaImpl implements ImportPartida {
 	private static final Logger LOGGER = org.slf4j.LoggerFactory.getLogger(ImportPartidaImpl.class);
-	private static final String PARTIDA_FOLDER = "c:/poker/partidas";
-	private static final String PARTIDA_BACKUP_FOLDER = "c:/poker/partidas/backup";
-	private static final String RANKING_FOLDER = "c:/poker/ranking/gerado";
 
 	@Autowired
 	private PessoaService pessoaService;
@@ -63,7 +63,11 @@ public class ImportPartidaImpl implements ImportPartida {
 		final Set<Partida> partidasSet = new HashSet<>();
 		for (final File file : partidaFiles) {
 			final Set<Partida> partidasFromDirectory = createPartidasFromDirectory(file);
-			partidasSet.addAll(partidasFromDirectory);
+			if (partidasFromDirectory == null || partidasFromDirectory.isEmpty()) {
+				LOGGER.info("Não foi encontrada nenhuma partida para importar");
+			} else {
+				partidasSet.addAll(partidasFromDirectory);
+			}
 		}
 		return partidaService.save(partidasSet);
 	}
@@ -72,7 +76,7 @@ public class ImportPartidaImpl implements ImportPartida {
 		final Collection<File> files = new ArrayList<>();
 		try {
 
-			final File directory = new File(PARTIDA_FOLDER);
+			final File directory = new File(PokerPaths.POKER_PARTIDA_FOLDER);
 			Files.list(directory.toPath()).forEach(filePath -> {
 				if (Files.isDirectory(filePath)) {
 					files.add(filePath.toFile());
@@ -99,6 +103,7 @@ public class ImportPartidaImpl implements ImportPartida {
 	}
 
 	private Set<Partida> createPartidasFromFiles(final String year, final File[] listFiles) {
+		Validator.deletarArquivo(year);
 		if (listFiles.length > 0) {
 			return createPartidasFromFile(year, listFiles[0]);
 		}
@@ -113,7 +118,7 @@ public class ImportPartidaImpl implements ImportPartida {
 			final Sheet sheet = wb.getSheetAt(0);
 			final Set<Partida> partidas = getPartidas(year, sheet);
 			wb.close();
-			// createBackupFile(year, file);
+			createBackupFile(year, file);
 			return partidas;
 		} catch (final EncryptedDocumentException | InvalidFormatException | IOException e) {
 			e.printStackTrace();
@@ -208,50 +213,8 @@ public class ImportPartidaImpl implements ImportPartida {
 			}
 
 		}
-		validarInformacoes(year, saldoMap);
+		Validator.validarSaldo(year, saldoMap);
 		return partidas;
-	}
-
-	private void validarInformacoes(final String year, final Map<Pessoa, Saldo> saldoMap) {
-		try {
-			final List<String> errorLines = new ArrayList<>();
-			final File file = new File(RANKING_FOLDER + "/" + year + "/validacoes.txt");
-			Files.deleteIfExists(file.toPath());
-
-			final Iterator<Entry<Pessoa, Saldo>> iterator2 = saldoMap.entrySet().iterator();
-			while (iterator2.hasNext()) {
-				final Entry<Pessoa, Saldo> entry2 = iterator2.next();
-				final Pessoa key = entry2.getKey();
-				final Saldo value = entry2.getValue();
-
-				if (value.getSaldoAcumulado().compareTo(value.getSubTotalLancado()) != 0) {
-					errorLines.add(key.getNome() + ": sub-total = " + value.getSubTotalLancado() + " e deveria ser = "
-							+ value.getSaldoAcumulado());
-				}
-			}
-
-			if (errorLines.isEmpty()) {
-				return;
-			}
-
-			if (!file.exists()) {
-				Files.createDirectories(new File(RANKING_FOLDER + "/" + year).toPath());
-				Files.createFile(file.toPath());
-			}
-
-			final FileWriter writer = new FileWriter(file.getAbsoluteFile(), true);
-
-			for (final String erroLine : errorLines) {
-				writer.write(erroLine);
-				writer.write("\r\n");
-			}
-
-			writer.close();
-		} catch (final IOException e) {
-			LOGGER.error("validarInformacoes", e);
-			e.printStackTrace();
-		}
-
 	}
 
 	private BigDecimal getBigDecimalFromCell(final Cell cell) {
@@ -298,10 +261,15 @@ public class ImportPartidaImpl implements ImportPartida {
 	}
 
 	private void createBackupFile(final String year, final File file) {
-		final Path targetPath = new File(PARTIDA_BACKUP_FOLDER + "/" + year + "/" + file.getName()).toPath();
+		Path targetPath = new File(PokerPaths.POKER_PARTIDA_BACKUP_FOLDER + "/" + year + "/" + file.getName()).toPath();
 		try {
 			if (!Files.exists(targetPath)) {
 				Files.createDirectories(targetPath);
+			} else {
+				final String fileName = FilenameUtils.getBaseName(file.getName())
+						+ LocalDateTime.now().format(DateTimeFormatter.ofPattern("ddMMyyyy hhmmss")) + "."
+						+ FilenameUtils.getExtension(file.getName());
+				targetPath = new File(PokerPaths.POKER_PARTIDA_BACKUP_FOLDER + "/" + year + "/" + fileName).toPath();
 			}
 			LOGGER.info("Gerando o backup de " + file + " para " + targetPath);
 			Files.move(file.toPath(), targetPath, StandardCopyOption.REPLACE_EXISTING);

@@ -17,12 +17,13 @@ public class Classificacao {
 	private int posicaoAtual;
 	private int posicaoAnterior;
 	private int movimentacao;
+	private int ano;
 
 	public Classificacao(final PartidaPessoa partidaPessoa) {
 		this.pessoa = partidaPessoa.getPessoa();
 	}
 
-	public Classificacao(final Colocacao colocacao) {
+	public Classificacao(final Colocacao colocacao, final int ano) {
 		this.pessoa = colocacao.getPessoa();
 		this.saldo = colocacao.getSaldo();
 		this.jogos = colocacao.getJogos();
@@ -32,6 +33,7 @@ public class Classificacao {
 		this.posicaoAtual = colocacao.getPosicaoAtual();
 		this.posicaoAnterior = colocacao.getPosicaoAnterior();
 		this.movimentacao = (this.posicaoAnterior != 0) ? (this.posicaoAnterior - this.posicaoAtual) : 0;
+		this.ano = ano;
 	}
 
 	public Pessoa getPessoa() {
@@ -156,6 +158,14 @@ public class Classificacao {
 
 	public void setMovimentacao(int movimentacao) {
 		this.movimentacao = movimentacao;
+	}
+
+	public int getAno() {
+		return ano;
+	}
+
+	public void setAno(int ano) {
+		this.ano = ano;
 	}
 
 }

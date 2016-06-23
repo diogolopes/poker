@@ -16,7 +16,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.transaction.BeforeTransaction;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.google.gwt.thirdparty.guava.common.collect.Iterables;
+import com.google.common.collect.Iterables;
 
 import br.lopes.poker.H2TestConfig;
 import br.lopes.poker.builder.RankingBuilder;
@@ -76,13 +76,17 @@ public class RankingRepositoryTest {
 	}
 
 	@Test
-	public void testColocaoDeCadaUm(){
+	public void testColocaoDeCadaUm() {
 		final List<Ranking> findAll = repository.findAll();
 		final Ranking ranking = Iterables.getOnlyElement(findAll);
-		
-		assertThat("Quantidade de registros dps do insert: ", Iterables.get(ranking.getColocacoes(), 0).getPessoa().getNome(), equalTo(EColocacao.PRIMEIRO.getNome()));
-		assertThat("Quantidade de registros dps do insert: ", Iterables.get(ranking.getColocacoes(), 1).getPessoa().getNome(), equalTo(EColocacao.SEGUNDO.getNome()));
-		assertThat("Quantidade de registros dps do insert: ", Iterables.get(ranking.getColocacoes(), 2).getPessoa().getNome(), equalTo(EColocacao.QUINTO.getNome()));
-		
+
+		assertThat("Quantidade de registros dps do insert: ",
+				Iterables.get(ranking.getColocacoes(), 0).getPessoa().getNome(),
+				equalTo(EColocacao.PRIMEIRO.getNome()));
+		assertThat("Quantidade de registros dps do insert: ",
+				Iterables.get(ranking.getColocacoes(), 1).getPessoa().getNome(), equalTo(EColocacao.SEGUNDO.getNome()));
+		assertThat("Quantidade de registros dps do insert: ",
+				Iterables.get(ranking.getColocacoes(), 2).getPessoa().getNome(), equalTo(EColocacao.QUINTO.getNome()));
+
 	}
 }

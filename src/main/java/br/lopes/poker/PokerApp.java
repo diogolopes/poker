@@ -19,34 +19,34 @@ import br.lopes.poker.service.ImportRanking;
 @SpringBootApplication
 public class PokerApp implements CommandLineRunner {
 
-    @Autowired
-    private ImportRanking importRanking;
+	@Autowired
+	private ImportRanking importRanking;
 
-    @Autowired
-    private ImportPartida importPartida;
+	@Autowired
+	private ImportPartida importPartida;
 
-    @Autowired
-    private ClassificacaoService classificacaoService;
+	@Autowired
+	private ClassificacaoService classificacaoService;
 
-    public static void main(final String[] args) {
-        SpringApplication.run(PokerApp.class, args);
-    }
+	public static void main(final String[] args) {
+		SpringApplication.run(PokerApp.class, args);
+	}
 
-    @Override
-    public void run(final String... args) throws Exception {
-        final List<Ranking> importRankings = importRanking.importRankings();
-        final List<Partida> partidas = importPartida.importPartidas();
+	@Override
+	public void run(final String... args) throws Exception {
+		final List<Ranking> importRankings = importRanking.importRankings();
+		final List<Partida> partidas = importPartida.importPartidas();
 
-        final Ranking ranking = importRankings.stream() // Convert to steam
-                .filter(r -> r.getAno().equals(LocalDate.now().getYear())) // we
-                                                                           // want
-                                                                           // "michael"
-                                                                           // only
-                .findAny() // If 'findAny' then return found
-                .orElse(null); // If not found, return null
+		final Ranking ranking = importRankings.stream() // Convert to steam
+				.filter(r -> r.getAno().equals(LocalDate.now().getYear())) // we
+																			// want
+																			// "michael"
+																			// only
+				.findAny() // If 'findAny' then return found
+				.orElse(null); // If not found, return null
 
-        classificacaoService.ranking(ranking, new HashSet<>(partidas), RankingType.SALDO);
+		classificacaoService.ranking(ranking, new HashSet<>(partidas), RankingType.SALDO);
 
-    }
+	}
 
 }
