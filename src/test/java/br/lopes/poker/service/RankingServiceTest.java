@@ -18,7 +18,7 @@ import com.google.common.collect.Sets;
 
 import br.lopes.poker.ServiceTestConfig;
 import br.lopes.poker.builder.PartidaBuilder;
-import br.lopes.poker.data.Classificacao;
+import br.lopes.poker.data.ClassificacaoImpl;
 import br.lopes.poker.domain.Partida;
 import br.lopes.poker.domain.Pessoa;
 import br.lopes.poker.faker.PartidaFaker.EPartida;
@@ -50,10 +50,10 @@ public class RankingServiceTest {
 		// // specify mock behave when method called
 		// when(partidaMock.findByData(EPartida.CASA_DA_SONIA.getData())).thenReturn(Sets.newHashSet(partida));
 
-		final Map<Pessoa, Classificacao> rankingBySaldo = rankingService.ranking(partida, RankingType.SALDO);
+		final Map<Pessoa, ClassificacaoImpl> rankingBySaldo = rankingService.ranking(partida, RankingType.SALDO);
 		assertThat("Ranking está vazio", rankingBySaldo.isEmpty(), equalTo(false));
 
-		final Iterator<Entry<Pessoa, Classificacao>> iterator = rankingBySaldo.entrySet().iterator();
+		final Iterator<Entry<Pessoa, ClassificacaoImpl>> iterator = rankingBySaldo.entrySet().iterator();
 		assertThat("1o colocado está errado", EPessoa.DIOGO.getNome(),
 				equalTo(iterator.next().getValue().getPessoa().getNome()));
 		assertThat("2o colocado está errado", EPessoa.EDUARDO.getNome(),
@@ -78,11 +78,11 @@ public class RankingServiceTest {
 		// // specify mock behave when method called
 		// when(partidaMock.findByData(EPartida.CASA_DA_SONIA.getData())).thenReturn(Sets.newHashSet(partida));
 
-		final Map<Pessoa, Classificacao> rankingByAproveitamento = rankingService.ranking(partida,
+		final Map<Pessoa, ClassificacaoImpl> rankingByAproveitamento = rankingService.ranking(partida,
 				RankingType.APROVEITAMENTO);
 		assertThat("Ranking está vazio", rankingByAproveitamento.isEmpty(), equalTo(false));
 
-		final Iterator<Entry<Pessoa, Classificacao>> iterator = rankingByAproveitamento.entrySet().iterator();
+		final Iterator<Entry<Pessoa, ClassificacaoImpl>> iterator = rankingByAproveitamento.entrySet().iterator();
 
 		assertThat("1o colocado está errado", EPessoa.DIOGO.getNome(),
 				equalTo(iterator.next().getValue().getPessoa().getNome()));
@@ -128,12 +128,12 @@ public class RankingServiceTest {
 		// // specify mock behave when method called
 		// when(partidaMock.findByData(EPartida.CASA_DA_SONIA.getData())).thenReturn(Sets.newHashSet(partida));
 
-		final Map<Pessoa, Classificacao> rankingBySaldo = rankingService.ranking(
+		final Map<Pessoa, ClassificacaoImpl> rankingBySaldo = rankingService.ranking(
 				Sets.newHashSet(partidaCasaSonia, partidaCasaFilipe, partidaCasaMaeda, partidaCasaMoacir),
 				RankingType.SALDO);
 		assertThat("Qtde de jogadores no ranking errada", 4, equalTo(rankingBySaldo.size()));
 
-		Iterator<Entry<Pessoa, Classificacao>> iterator = rankingBySaldo.entrySet().iterator();
+		Iterator<Entry<Pessoa, ClassificacaoImpl>> iterator = rankingBySaldo.entrySet().iterator();
 		int i = 0;
 		assertThat(i++ + "o colocado está errado", EPessoa.DIOGO.getNome(),
 				equalTo(iterator.next().getValue().getPessoa().getNome()));
@@ -188,12 +188,12 @@ public class RankingServiceTest {
 		// // specify mock behave when method called
 		// when(partidaMock.findByData(EPartida.CASA_DA_SONIA.getData())).thenReturn(Sets.newHashSet(partida));
 
-		final Map<Pessoa, Classificacao> rankingBySaldo = rankingService.ranking(
+		final Map<Pessoa, ClassificacaoImpl> rankingBySaldo = rankingService.ranking(
 				Sets.newHashSet(partidaCasaSonia, partidaCasaFilipe, partidaCasaMaeda, partidaCasaMoacir),
 				RankingType.SALDO);
 		assertThat("Qtde de jogadores no ranking errada", 6, equalTo(rankingBySaldo.size()));
 
-		Iterator<Entry<Pessoa, Classificacao>> iterator = rankingBySaldo.entrySet().iterator();
+		Iterator<Entry<Pessoa, ClassificacaoImpl>> iterator = rankingBySaldo.entrySet().iterator();
 		int i = 0;
 		assertThat(i++ + "o colocado está errado", EPessoa.EDUARDO.getNome(),
 				equalTo(iterator.next().getValue().getPessoa().getNome()));
@@ -258,12 +258,12 @@ public class RankingServiceTest {
 		// // specify mock behave when method called
 		// when(partidaMock.findByData(EPartida.CASA_DA_SONIA.getData())).thenReturn(Sets.newHashSet(partida));
 
-		final Map<Pessoa, Classificacao> rankingBySaldo = rankingService.ranking(
+		final Map<Pessoa, ClassificacaoImpl> rankingBySaldo = rankingService.ranking(
 				Sets.newHashSet(partidaCasaSonia, partidaCasaFilipe, partidaCasaMaeda, partidaCasaMoacir),
 				RankingType.APROVEITAMENTO);
 		assertThat("Qtde de jogadores no ranking errada", 4, equalTo(rankingBySaldo.size()));
 
-		Iterator<Entry<Pessoa, Classificacao>> iterator = rankingBySaldo.entrySet().iterator();
+		Iterator<Entry<Pessoa, ClassificacaoImpl>> iterator = rankingBySaldo.entrySet().iterator();
 		int i = 0;
 		assertThat(i++ + "o colocado está errado", EPessoa.DIOGO.getNome(),
 				equalTo(iterator.next().getValue().getPessoa().getNome()));
@@ -318,12 +318,12 @@ public class RankingServiceTest {
 		// // specify mock behave when method called
 		// when(partidaMock.findByData(EPartida.CASA_DA_SONIA.getData())).thenReturn(Sets.newHashSet(partida));
 
-		final Map<Pessoa, Classificacao> rankingBySaldo = rankingService.ranking(
+		final Map<Pessoa, ClassificacaoImpl> rankingBySaldo = rankingService.ranking(
 				Sets.newHashSet(partidaCasaSonia, partidaCasaFilipe, partidaCasaMaeda, partidaCasaMoacir),
 				RankingType.APROVEITAMENTO);
 		assertThat("Qtde de jogadores no ranking errada", 6, equalTo(rankingBySaldo.size()));
 
-		Iterator<Entry<Pessoa, Classificacao>> iterator = rankingBySaldo.entrySet().iterator();
+		Iterator<Entry<Pessoa, ClassificacaoImpl>> iterator = rankingBySaldo.entrySet().iterator();
 
 		// while (iterator.hasNext()) {
 		// final Entry<Pessoa, Ranking> next = iterator.next();

@@ -13,11 +13,7 @@
 	<logger name="org.xnio" level="ERROR" />
 	<logger name="/" level="ERROR" />
 	<logger name="org.hibernate.SQL" level="DEBUG" />
-	<logger name="com.mkyong.web" level="debug"
-		additivity="false">
-		<appender-ref ref="STDOUT" />
-	</logger>
-	
+
 	<property name="DEV_HOME" value="c:/poker/log" />
 
 	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
@@ -72,7 +68,7 @@
 
 	<root level="INFO">
 		<appender-ref ref="STDOUT" />
-		<appender-ref ref="FILE-AUDIT"/>
+		<appender-ref ref="FILE-AUDIT" />
 	</root>
 
 
