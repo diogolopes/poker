@@ -7,9 +7,11 @@ import br.lopes.poker.domain.Ranking;
 
 public interface RankingService {
 
-    Ranking findByAno(final int ano);
+	Ranking findByAno(final int ano);
 
-    Ranking save(final Ranking ranking);
+	Ranking save(final Ranking ranking);
 
-    List<Ranking> save(final Collection<Ranking> rankings);
+	List<Ranking> save(final Collection<Ranking> rankings);
+
+	void delete(final Ranking ranking);
 }

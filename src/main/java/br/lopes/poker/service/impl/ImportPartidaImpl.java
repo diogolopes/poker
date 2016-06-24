@@ -15,6 +15,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -69,7 +70,7 @@ public class ImportPartidaImpl implements ImportPartida {
 				partidasSet.addAll(partidasFromDirectory);
 			}
 		}
-		return partidaService.save(partidasSet);
+		return (partidasSet.isEmpty()) ? Collections.emptyList() : partidaService.save(partidasSet);
 	}
 
 	private Collection<File> searchFromPartidaDirectory() {
@@ -261,15 +262,14 @@ public class ImportPartidaImpl implements ImportPartida {
 	}
 
 	private void createBackupFile(final String year, final File file) {
-		Path targetPath = new File(PokerPaths.POKER_PARTIDA_BACKUP_FOLDER + "/" + year + "/" + file.getName()).toPath();
+		final String fileName = FilenameUtils.getBaseName(file.getName())
+				+ LocalDateTime.now().format(DateTimeFormatter.ofPattern(" dd-MM-yyyy hh-mm-ss")) + "."
+				+ FilenameUtils.getExtension(file.getName());
+
+		Path targetPath = new File(PokerPaths.POKER_PARTIDA_BACKUP_FOLDER + "/" + year + "/" + fileName).toPath();
 		try {
 			if (!Files.exists(targetPath)) {
 				Files.createDirectories(targetPath);
-			} else {
-				final String fileName = FilenameUtils.getBaseName(file.getName())
-						+ LocalDateTime.now().format(DateTimeFormatter.ofPattern("ddMMyyyy hhmmss")) + "."
-						+ FilenameUtils.getExtension(file.getName());
-				targetPath = new File(PokerPaths.POKER_PARTIDA_BACKUP_FOLDER + "/" + year + "/" + fileName).toPath();
 			}
 			LOGGER.info("Gerando o backup de " + file + " para " + targetPath);
 			Files.move(file.toPath(), targetPath, StandardCopyOption.REPLACE_EXISTING);

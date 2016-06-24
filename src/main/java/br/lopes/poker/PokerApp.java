@@ -19,9 +19,13 @@ import br.lopes.poker.service.ClassificacaoService.RankingType;
 import br.lopes.poker.service.ExportRanking;
 import br.lopes.poker.service.ImportPartida;
 import br.lopes.poker.service.ImportRanking;
+import br.lopes.poker.service.RankingService;
 
 @SpringBootApplication
 public class PokerApp implements CommandLineRunner {
+
+	@Autowired
+	private RankingService rankingService;
 
 	@Autowired
 	private ImportRanking importRanking;
@@ -50,7 +54,11 @@ public class PokerApp implements CommandLineRunner {
 																			// "michael"
 																			// only
 				.findAny() // If 'findAny' then return found
-				.orElse(null); // If not found, return null
+				.orElse(rankingService.findByAno(LocalDate.now().getYear())); // If
+																				// not
+																				// found,
+																				// return
+																				// null
 
 		final Map<Pessoa, Classificacao> rankingMap = classificacaoService.ranking(ranking, new HashSet<>(partidas),
 				RankingType.SALDO);

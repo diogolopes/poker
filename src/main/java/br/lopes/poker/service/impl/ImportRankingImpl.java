@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -53,12 +54,12 @@ public class ImportRankingImpl implements ImportRanking {
 		final Collection<File> searchFromRankingFile = searchFromRankingFile();
 		final Collection<Ranking> rankingSet = new HashSet<>();
 		for (final File file : searchFromRankingFile) {
-			final Ranking createRankingFromDirectory = createRankingFromDirectory(file);
-			if (createRankingFromDirectory != null) {
-				rankingSet.add(createRankingFromDirectory);
+			final Ranking ranking = createRankingFromDirectory(file);
+			if (ranking != null) {
+				rankingSet.add(ranking);
 			}
 		}
-		return rankingService.save(rankingSet);
+		return rankingSet.isEmpty() ? Collections.emptyList() : rankingService.save(rankingSet);
 	}
 
 	private Collection<File> searchFromRankingFile() {
@@ -123,6 +124,8 @@ public class ImportRankingImpl implements ImportRanking {
 		if (ranking == null) {
 			ranking = new Ranking();
 			ranking.setAno(year);
+		} else {
+			LOGGER.info("Ja existia um ranking de " + ranking.getAno() + " criado em " + ranking.getDataAtualizacao());
 		}
 		ranking.setDataAtualizacao(LocalDate.now());
 		ranking.addAllColocacao(colocacoes);
@@ -175,15 +178,14 @@ public class ImportRankingImpl implements ImportRanking {
 	}
 
 	private void createBackupFile(final String year, final File file) {
-		Path targetPath = new File(PokerPaths.POKER_RANKING_BACKUP_FOLDER + "/" + year + "/" + file.getName()).toPath();
+		final String fileName = FilenameUtils.getBaseName(file.getName())
+				+ LocalDateTime.now().format(DateTimeFormatter.ofPattern(" dd-MM-yyyy hh-mm-ss")) + "."
+				+ FilenameUtils.getExtension(file.getName());
+
+		Path targetPath = new File(PokerPaths.POKER_RANKING_BACKUP_FOLDER + "/" + year + "/" + fileName).toPath();
 		try {
 			if (!Files.exists(targetPath)) {
 				Files.createDirectories(targetPath);
-			} else {
-				final String fileName = FilenameUtils.getBaseName(file.getName())
-						+ LocalDateTime.now().format(DateTimeFormatter.ofPattern("ddMMyyyy hhmmss"))
-						+ "." + FilenameUtils.getExtension(file.getName());
-				targetPath = new File(PokerPaths.POKER_RANKING_BACKUP_FOLDER + "/" + year + "/" + fileName).toPath();
 			}
 			LOGGER.info("Gerando o backup de " + file + " para " + targetPath);
 			Files.move(file.toPath(), targetPath, StandardCopyOption.REPLACE_EXISTING);

@@ -11,6 +11,7 @@ import java.util.TreeMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import br.lopes.poker.data.Classificacao;
@@ -21,6 +22,7 @@ import br.lopes.poker.domain.Pessoa;
 import br.lopes.poker.domain.Ranking;
 import br.lopes.poker.helper.Validator;
 import br.lopes.poker.service.ClassificacaoService;
+import br.lopes.poker.service.RankingService;
 
 @Service
 public class ClassificacaoServiceImpl implements ClassificacaoService {
@@ -28,12 +30,19 @@ public class ClassificacaoServiceImpl implements ClassificacaoService {
 
 	private RankingCriteriaFactory rankingCriteriaFactory = new RankingCriteriaFactory();
 
+	@Autowired
+	private RankingService rankingService;
+
 	@Override
 	public Map<Pessoa, Classificacao> ranking(final Ranking ranking, final Set<Partida> partidas,
 			final RankingType rankingType) {
 		if (ranking == null) {
+			LOGGER.info("Nenhum ranking encontrado....");
 			return Collections.emptyMap();
 		}
+		LOGGER.info("Iniciando reclassificacao do ranking de " + ranking.getAno() + " ultima atualização em "
+				+ ranking.getDataAtualizacao());
+
 		Map<Pessoa, Classificacao> rankingMap = transformFromRanking(ranking);
 
 		// final Iterator<Entry<Pessoa, Classificacao>> iterator =
@@ -45,6 +54,7 @@ public class ClassificacaoServiceImpl implements ClassificacaoService {
 		// System.out.println(value);
 		// }
 		// System.out.println("");
+		LOGGER.info("Processando " + partidas.size() + " novas partidas para o ranking.");
 
 		for (final Partida partida : partidas) {
 			rankingMap = getRankingMap(partida, rankingMap);
@@ -59,7 +69,15 @@ public class ClassificacaoServiceImpl implements ClassificacaoService {
 		final Map<Pessoa, Classificacao> treeMap = rankingCriteriaFactory.create(rankingMap, rankingType);
 		treeMap.putAll(rankingMap);
 		updatePosition(treeMap);
+
+		final Ranking novoRanking = transformToRanking(ranking, treeMap);
+
 		return treeMap;
+	}
+
+	private Ranking transformToRanking(final Ranking ranking, final Map<Pessoa, Classificacao> treeMap) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 	private Map<Pessoa, Classificacao> transformFromRanking(final Ranking ranking) {
