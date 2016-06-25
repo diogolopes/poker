@@ -3,19 +3,32 @@ package br.lopes.poker.service;
 import java.util.Map;
 import java.util.Set;
 
-import br.lopes.poker.data.ClassificacaoImpl;
+import br.lopes.poker.data.Classificacao;
 import br.lopes.poker.domain.Partida;
 import br.lopes.poker.domain.Pessoa;
 import br.lopes.poker.domain.Ranking;
 
 public interface ClassificacaoService {
 
-    public enum RankingType {
-        SALDO, APROVEITAMENTO;
-    }
+	public enum RankingType {
+		SALDO("Saldo"), APROVEITAMENTO("Aproveitamento");
+		private final String nome;
 
-    Map<Pessoa, ClassificacaoImpl> ranking(final Partida partida, final RankingType rankingType);
-    Map<Pessoa, ClassificacaoImpl> ranking(final Set<Partida> partidas, final RankingType rankingType);
-    Ranking ranking(final Ranking ranking, final Set<Partida> partidas, final RankingType rankingType);
+		RankingType(final String nome) {
+			this.nome = nome;
+		}
+
+		public String getNome() {
+			return nome;
+		}
+	}
+
+	Map<Pessoa, Classificacao> ranking(final Partida partida, final RankingType rankingType);
+
+	Map<Pessoa, Classificacao> ranking(final Set<Partida> partidas, final RankingType rankingType);
+
+	void generateRankingFileByPartidasAndType(final Ranking ranking, final Set<Partida> partidas, final RankingType rankingType) throws Exception;
+
+	void generateRankingFileByType(final Ranking ranking, final RankingType rankingType) throws Exception;
 
 }

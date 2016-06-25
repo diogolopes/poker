@@ -27,6 +27,7 @@ import br.lopes.poker.data.Classificacao;
 import br.lopes.poker.domain.Pessoa;
 import br.lopes.poker.domain.Ranking;
 import br.lopes.poker.helper.PokerPaths;
+import br.lopes.poker.service.ClassificacaoService.RankingType;
 import br.lopes.poker.service.ExportRanking;
 import br.lopes.poker.service.RankingService;
 
@@ -36,21 +37,22 @@ public class ExportRankingServiceImpl implements ExportRanking {
 	@Autowired
 	private RankingService rankingService;
 
-	private String getFilename() {
-		return "Ranking pds " + LocalDate.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")) + ".xlsx";
+	private String getFilename(final RankingType rankingType) {
+		return "Ranking PDS (" + rankingType.getNome() + ") "
+				+ LocalDate.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")) + ".xlsx";
 	}
 
 	@Override
-	public void export(final Map<Pessoa, Classificacao> map, final Integer ano) throws Exception {
+	public void export(final Map<Pessoa, Classificacao> map, final Integer ano, final RankingType rankingType) throws Exception {
 		if (map == null || map.isEmpty()) {
 			return;
 		}
 		final Collection<Classificacao> classificacoes = map.values();
-		generateRankingFile(ano, classificacoes);
+		generateRankingFile(ano, classificacoes, rankingType);
 	}
 
-	private void generateRankingFile(final Integer ano, final Collection<? extends Classificacao> classificacoes)
-			throws IOException, FileNotFoundException {
+	private void generateRankingFile(final Integer ano, final Collection<? extends Classificacao> classificacoes,
+			final RankingType rankingType) throws IOException, FileNotFoundException {
 		final Workbook wb = new XSSFWorkbook();
 		final Sheet sheet = wb.createSheet(String.valueOf(ano));
 
@@ -67,7 +69,7 @@ public class ExportRankingServiceImpl implements ExportRanking {
 		autosizeColumns(sheet);
 
 		final File fileDirectory = new File(PokerPaths.POKER_RANKING_GERADO_FOLDER + "/" + ano + "/");
-		final File file = new File(PokerPaths.POKER_RANKING_GERADO_FOLDER + "/" + ano + "/" + getFilename());
+		final File file = new File(PokerPaths.POKER_RANKING_GERADO_FOLDER + "/" + ano + "/" + getFilename(rankingType));
 
 		if (!Files.exists(fileDirectory.toPath())) {
 			Files.createDirectories(fileDirectory.toPath());
@@ -248,12 +250,18 @@ public class ExportRankingServiceImpl implements ExportRanking {
 
 	@Override
 	public void export(final Ranking ranking) throws Exception {
+		export(ranking, RankingType.SALDO);
+	}
+
+	@Override
+	public void export(final Ranking ranking, final RankingType rankingType) throws Exception {
 		if (ranking == null || ranking.getColocacoes().isEmpty()) {
 			return;
 		}
 		final Ranking findByAno = rankingService.findByAno(ranking.getAno());
 		final Collection<? extends Classificacao> classificacoes = findByAno.getColocacoes();
-		generateRankingFile(ranking.getAno(), classificacoes);
+		generateRankingFile(ranking.getAno(), classificacoes, rankingType);
+
 	}
 
 }

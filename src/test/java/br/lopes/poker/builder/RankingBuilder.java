@@ -1,6 +1,6 @@
 package br.lopes.poker.builder;
 
-import java.time.LocalDate;
+import java.util.Date;
 
 import br.lopes.poker.domain.Ranking;
 import br.lopes.poker.faker.ColocacaoFaker;
@@ -20,7 +20,7 @@ public class RankingBuilder {
         return new RankingBuilder(eRanking);
     }
 
-    public RankingBuilder withData(final LocalDate data) {
+    public RankingBuilder withData(final Date data) {
         this.ranking.setDataAtualizacao(data);
         return this;
     }

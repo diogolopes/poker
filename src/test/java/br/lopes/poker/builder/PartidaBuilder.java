@@ -1,7 +1,7 @@
 package br.lopes.poker.builder;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.util.Date;
 
 import br.lopes.poker.domain.Partida;
 import br.lopes.poker.faker.PartidaFaker;
@@ -21,7 +21,7 @@ public class PartidaBuilder {
         return new PartidaBuilder(ePartida);
     }
 
-    public PartidaBuilder withData(final LocalDate data) {
+    public PartidaBuilder withData(final Date data) {
         this.partida.setData(data);
         return this;
     }

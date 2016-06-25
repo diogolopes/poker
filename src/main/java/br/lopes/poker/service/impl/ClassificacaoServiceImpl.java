@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import br.lopes.poker.data.Classificacao;
 import br.lopes.poker.data.ClassificacaoImpl;
 import br.lopes.poker.domain.Colocacao;
 import br.lopes.poker.domain.Partida;
@@ -21,6 +22,7 @@ import br.lopes.poker.domain.Pessoa;
 import br.lopes.poker.domain.Ranking;
 import br.lopes.poker.helper.Validator;
 import br.lopes.poker.service.ClassificacaoService;
+import br.lopes.poker.service.ExportRanking;
 import br.lopes.poker.service.RankingService;
 
 @Service
@@ -32,20 +34,21 @@ public class ClassificacaoServiceImpl implements ClassificacaoService {
 	@Autowired
 	private RankingService rankingService;
 
+	@Autowired
+	private ExportRanking exportRanking;
+
 	@Override
-	public Ranking ranking(final Ranking ranking, final Set<Partida> partidas, final RankingType rankingType) {
-		if (ranking == null) {
-			LOGGER.info("Nenhum ranking encontrado....");
-			return null;
-		}
-		if (partidas.isEmpty()) {
-			LOGGER.info("Nenhuma partida encontrada para importar....");
-			return ranking;
+	public void generateRankingFileByPartidasAndType(final Ranking ranking, final Set<Partida> partidas,
+			final RankingType rankingType) throws Exception {
+		if (ranking == null || partidas.isEmpty()) {
+			LOGGER.info("ranking encontrado[" + ranking + "], partidas.size[" + partidas.size() + "]");
+			exportRanking.export(ranking, rankingType);
+			return;
 		}
 		LOGGER.info("Iniciando reclassificacao do ranking de " + ranking.getAno() + " ultima atualização em "
-				+ ranking.getDataAtualizacao() + " para " + partidas.size() + " partidas.");
+				+ ranking.getDataAtualizacao() + " para " + partidas.size() + " partidas por " + rankingType.getNome());
 
-		Map<Pessoa, ClassificacaoImpl> rankingMap = transformFromRanking(ranking);
+		Map<Pessoa, Classificacao> rankingMap = transformFromRanking(ranking);
 
 		// final Iterator<Entry<Pessoa, Classificacao>> iterator =
 		// rankingMap.entrySet().iterator();
@@ -68,20 +71,21 @@ public class ClassificacaoServiceImpl implements ClassificacaoService {
 			 */
 		}
 
-		final Map<Pessoa, ClassificacaoImpl> treeMap = rankingCriteriaFactory.create(rankingMap, rankingType);
+		final Map<Pessoa, Classificacao> treeMap = rankingCriteriaFactory.create(rankingMap, rankingType);
 		treeMap.putAll(rankingMap);
 		updatePosition(treeMap);
 
-		return transformToRanking(ranking, treeMap);
+		final Ranking save = rankingService.save(transformToRanking(ranking, treeMap));
+		exportRanking.export(save, rankingType);
 	}
 
-	private Ranking transformToRanking(final Ranking ranking, final Map<Pessoa, ClassificacaoImpl> treeMap) {
-		final Iterator<Entry<Pessoa, ClassificacaoImpl>> classificacaoIterator = treeMap.entrySet().iterator();
+	private Ranking transformToRanking(final Ranking ranking, final Map<Pessoa, Classificacao> treeMap) {
+		final Iterator<Entry<Pessoa, Classificacao>> classificacaoIterator = treeMap.entrySet().iterator();
 
 		while (classificacaoIterator.hasNext()) {
-			final Entry<Pessoa, ClassificacaoImpl> entry = classificacaoIterator.next();
+			final Entry<Pessoa, Classificacao> entry = classificacaoIterator.next();
 			final Pessoa pessoa = entry.getKey();
-			final ClassificacaoImpl classificacao = entry.getValue();
+			final Classificacao classificacao = entry.getValue();
 
 			Colocacao colocacao = ranking.getColocacoes().stream()
 					.filter(c -> c.getPessoa().getNome().equals(pessoa.getNome())).findFirst().orElse(null);
@@ -98,11 +102,11 @@ public class ClassificacaoServiceImpl implements ClassificacaoService {
 			colocacao.setPosicaoAtual(classificacao.getPosicaoAtual());
 			colocacao.setPosicaoAnterior(classificacao.getPosicaoAnterior());
 		}
-		return rankingService.save(ranking);
+		return ranking;
 	}
 
-	private Map<Pessoa, ClassificacaoImpl> transformFromRanking(final Ranking ranking) {
-		Map<Pessoa, ClassificacaoImpl> classificacaoMap = new HashMap<Pessoa, ClassificacaoImpl>();
+	private Map<Pessoa, Classificacao> transformFromRanking(final Ranking ranking) {
+		Map<Pessoa, Classificacao> classificacaoMap = new HashMap<Pessoa, Classificacao>();
 		for (final Colocacao colocacao : ranking.getColocacoes()) {
 			final ClassificacaoImpl classificacao = new ClassificacaoImpl(colocacao, ranking.getAno());
 			classificacaoMap.put(colocacao.getPessoa(), classificacao);
@@ -111,37 +115,37 @@ public class ClassificacaoServiceImpl implements ClassificacaoService {
 	}
 
 	@Override
-	public Map<Pessoa, ClassificacaoImpl> ranking(final Partida partida, final RankingType rankingType) {
-		final Map<Pessoa, ClassificacaoImpl> rankingBySaldo = getRankingMap(partida, null);
-		final Map<Pessoa, ClassificacaoImpl> treeMap = rankingCriteriaFactory.create(rankingBySaldo, rankingType);
+	public Map<Pessoa, Classificacao> ranking(final Partida partida, final RankingType rankingType) {
+		final Map<Pessoa, Classificacao> rankingBySaldo = getRankingMap(partida, null);
+		final Map<Pessoa, Classificacao> treeMap = rankingCriteriaFactory.create(rankingBySaldo, rankingType);
 		treeMap.putAll(rankingBySaldo);
 		updatePosition(treeMap);
 		return treeMap;
 	}
 
 	@Override
-	public Map<Pessoa, ClassificacaoImpl> ranking(final Set<Partida> partidas, RankingType rankingType) {
-		Map<Pessoa, ClassificacaoImpl> rankingMap = null;
+	public Map<Pessoa, Classificacao> ranking(final Set<Partida> partidas, RankingType rankingType) {
+		Map<Pessoa, Classificacao> rankingMap = null;
 		for (final Partida partida : partidas) {
 			rankingMap = getRankingMap(partida, rankingMap);
 
-			final Map<Pessoa, ClassificacaoImpl> treeMap = rankingCriteriaFactory.create(rankingMap, rankingType);
+			final Map<Pessoa, Classificacao> treeMap = rankingCriteriaFactory.create(rankingMap, rankingType);
 			treeMap.putAll(rankingMap);
 			updatePosition(treeMap);
 		}
 
-		final Map<Pessoa, ClassificacaoImpl> treeMap = rankingCriteriaFactory.create(rankingMap, rankingType);
+		final Map<Pessoa, Classificacao> treeMap = rankingCriteriaFactory.create(rankingMap, rankingType);
 		treeMap.putAll(rankingMap);
 		return treeMap;
 	}
 
-	private void updatePosition(final Map<Pessoa, ClassificacaoImpl> treeMap) {
-		final Iterator<Entry<Pessoa, ClassificacaoImpl>> iterator = treeMap.entrySet().iterator();
+	private void updatePosition(final Map<Pessoa, Classificacao> treeMap) {
+		final Iterator<Entry<Pessoa, Classificacao>> iterator = treeMap.entrySet().iterator();
 
 		int posicao = 1;
 		while (iterator.hasNext()) {
-			final Entry<Pessoa, ClassificacaoImpl> entry = iterator.next();
-			final ClassificacaoImpl value = entry.getValue();
+			final Entry<Pessoa, Classificacao> entry = iterator.next();
+			final Classificacao value = entry.getValue();
 			value.setPosicao(posicao++);
 			System.out.println(value);
 		}
@@ -149,39 +153,39 @@ public class ClassificacaoServiceImpl implements ClassificacaoService {
 
 	}
 
-	private Map<Pessoa, ClassificacaoImpl> getRankingMap(final Partida partida,
-			final Map<Pessoa, ClassificacaoImpl> rankingMap) {
-		final Map<Pessoa, ClassificacaoImpl> rankings;
+	private Map<Pessoa, Classificacao> getRankingMap(final Partida partida,
+			final Map<Pessoa, Classificacao> rankingMap) {
+		final Map<Pessoa, Classificacao> rankings;
 		if (rankingMap != null) {
 			rankings = rankingMap;
 		} else {
-			rankings = new HashMap<Pessoa, ClassificacaoImpl>();
+			rankings = new HashMap<Pessoa, Classificacao>();
 		}
 		return rankingByPartida(partida, rankings);
 	}
 
-	private Map<Pessoa, ClassificacaoImpl> rankingByPartida(final Partida partida,
-			final Map<Pessoa, ClassificacaoImpl> rankingMap) {
+	private Map<Pessoa, Classificacao> rankingByPartida(final Partida partida,
+			final Map<Pessoa, Classificacao> rankingMap) {
 		final Set<PartidaPessoa> partidaPessoas = partida.getPartidaPessoas();
 
 		for (final PartidaPessoa partidaPessoa : partidaPessoas) {
-			final ClassificacaoImpl rankingByPessoa = getRankingByPessoa(rankingMap, partidaPessoa);
+			final Classificacao rankingByPessoa = getRankingByPessoa(rankingMap, partidaPessoa);
 			rankingByPessoa.update(partidaPessoa);
 		}
 		return rankingMap;
 	}
 
-	private ClassificacaoImpl getRankingByPessoa(final Map<Pessoa, ClassificacaoImpl> rankingMap,
+	private Classificacao getRankingByPessoa(final Map<Pessoa, Classificacao> rankingMap,
 			final PartidaPessoa partidaPessoa) {
-		ClassificacaoImpl classificacao = rankingMap.get(partidaPessoa.getPessoa());
+		Classificacao classificacao = rankingMap.get(partidaPessoa.getPessoa());
 		if (classificacao == null) {
 			LOGGER.error("Não encontrou o nome " + partidaPessoa.getPessoa().getNome() + " no ranking atual. Ano "
-					+ partidaPessoa.getPartida().getData().getYear());
+					+ partidaPessoa.getPartida().getData());
 
 			Validator.validar(
 					"Não encontrou o nome " + partidaPessoa.getPessoa().getNome()
 							+ " no ranking atual que veio da partida do dia " + partidaPessoa.getPartida().getData(),
-					String.valueOf(partidaPessoa.getPartida().getData().getYear()));
+					String.valueOf(partidaPessoa.getPartida().getData()));
 			classificacao = new ClassificacaoImpl(partidaPessoa);
 			rankingMap.put(partidaPessoa.getPessoa(), classificacao);
 		}
@@ -190,27 +194,27 @@ public class ClassificacaoServiceImpl implements ClassificacaoService {
 
 	public class RankingCriteriaFactory {
 
-		public Map<Pessoa, ClassificacaoImpl> create(final Map<Pessoa, ClassificacaoImpl> rankingBySaldo,
+		public Map<Pessoa, Classificacao> create(final Map<Pessoa, Classificacao> rankingBySaldo,
 				final RankingType rankingType) {
 			switch (rankingType) {
 			case SALDO:
-				return new TreeMap<Pessoa, ClassificacaoImpl>(new RankingBySaldoComparator(rankingBySaldo));
+				return new TreeMap<Pessoa, Classificacao>(new RankingBySaldoComparator(rankingBySaldo));
 			default:
-				return new TreeMap<Pessoa, ClassificacaoImpl>(new RankingByAproveitamentoComparator(rankingBySaldo));
+				return new TreeMap<Pessoa, Classificacao>(new RankingByAproveitamentoComparator(rankingBySaldo));
 			}
 		}
 	}
 
 	public class RankingBySaldoComparator implements Comparator<Pessoa> {
-		private final Map<Pessoa, ClassificacaoImpl> base;
+		private final Map<Pessoa, Classificacao> base;
 
-		public RankingBySaldoComparator(final Map<Pessoa, ClassificacaoImpl> base) {
+		public RankingBySaldoComparator(final Map<Pessoa, Classificacao> base) {
 			this.base = base;
 		}
 
 		public int compare(final Pessoa a, final Pessoa b) {
-			final ClassificacaoImpl ranking = base.get(a);
-			final ClassificacaoImpl ranking2 = base.get(b);
+			final Classificacao ranking = base.get(a);
+			final Classificacao ranking2 = base.get(b);
 
 			int compareTo = ranking2.getSaldo().compareTo(ranking.getSaldo());
 			// Quem tiver menos jogos
@@ -247,15 +251,15 @@ public class ClassificacaoServiceImpl implements ClassificacaoService {
 	}
 
 	public class RankingByAproveitamentoComparator implements Comparator<Pessoa> {
-		private final Map<Pessoa, ClassificacaoImpl> base;
+		private final Map<Pessoa, Classificacao> base;
 
-		public RankingByAproveitamentoComparator(final Map<Pessoa, ClassificacaoImpl> base) {
+		public RankingByAproveitamentoComparator(final Map<Pessoa, Classificacao> base) {
 			this.base = base;
 		}
 
 		public int compare(final Pessoa a, final Pessoa b) {
-			final ClassificacaoImpl ranking = base.get(a);
-			final ClassificacaoImpl ranking2 = base.get(b);
+			final Classificacao ranking = base.get(a);
+			final Classificacao ranking2 = base.get(b);
 
 			int compareTo = ranking2.getAproveitamento().compareTo(ranking.getAproveitamento());
 			// Quem tiver menos jogos
@@ -288,6 +292,23 @@ public class ClassificacaoServiceImpl implements ClassificacaoService {
 			}
 			return compareTo;
 		}
+	}
+
+	@Override
+	public void generateRankingFileByType(final Ranking ranking, final RankingType rankingType) throws Exception {
+		if (ranking == null) {
+			LOGGER.info("Nenhum ranking encontrado....");
+			return;
+		}
+		LOGGER.info("Iniciando reclassificacao do ranking de " + ranking.getAno() + " ultima atualização em "
+				+ ranking.getDataAtualizacao() + " por " + rankingType.getNome());
+
+		Map<Pessoa, Classificacao> rankingMap = transformFromRanking(ranking);
+
+		final Map<Pessoa, Classificacao> treeMap = rankingCriteriaFactory.create(rankingMap, rankingType);
+		treeMap.putAll(rankingMap);
+		updatePosition(treeMap);
+		exportRanking.export(treeMap, ranking.getAno(), RankingType.APROVEITAMENTO);
 	}
 
 }

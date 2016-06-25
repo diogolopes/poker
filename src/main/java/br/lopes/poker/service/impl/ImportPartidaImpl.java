@@ -7,10 +7,8 @@ import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
-import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
@@ -24,6 +22,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+
+import javax.transaction.Transactional;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.poi.EncryptedDocumentException;
@@ -42,6 +42,7 @@ import org.springframework.util.StringUtils;
 import br.lopes.poker.data.Saldo;
 import br.lopes.poker.domain.Partida;
 import br.lopes.poker.domain.Pessoa;
+import br.lopes.poker.helper.Dates;
 import br.lopes.poker.helper.PokerPaths;
 import br.lopes.poker.helper.Validator;
 import br.lopes.poker.service.ImportPartida;
@@ -59,6 +60,7 @@ public class ImportPartidaImpl implements ImportPartida {
 	private PartidaService partidaService;
 
 	@Override
+	@Transactional
 	public List<Partida> importPartidas() {
 		final Collection<File> partidaFiles = searchFromPartidaDirectory();
 		final Set<Partida> partidasSet = new HashSet<>();
@@ -140,46 +142,60 @@ public class ImportPartidaImpl implements ImportPartida {
 		for (final Row row : sheet) {
 			if (header) {
 				for (final Cell cell : row) {
+					Partida partida;
 					if (cell.getCellType() == Cell.CELL_TYPE_STRING) {
-						final String stringCellValue = cell.getStringCellValue().trim();
-						if (stringCellValue.equalsIgnoreCase("Sub-total")
-								|| stringCellValue.equalsIgnoreCase("Sub total")) {
+						final String valorCelulaDataPartida = cell.getStringCellValue().trim();
+						if (valorCelulaDataPartida.equalsIgnoreCase("Sub-total")
+								|| valorCelulaDataPartida.equalsIgnoreCase("Sub total")) {
 							subTotalIndex = cell.getColumnIndex();
 							continue;
 						}
 
-						if (stringCellValue.equalsIgnoreCase("Bônus") || stringCellValue.equalsIgnoreCase("Bonus")) {
+						if (valorCelulaDataPartida.equalsIgnoreCase("Bônus")
+								|| valorCelulaDataPartida.equalsIgnoreCase("Bonus")) {
 							bonusIndex = cell.getColumnIndex();
 							continue;
 						}
 
-						if (stringCellValue.equalsIgnoreCase("Total")) {
+						if (valorCelulaDataPartida.equalsIgnoreCase("Total")) {
 							totalIndex = cell.getColumnIndex();
 							continue;
 						}
 
-						if (stringCellValue.equalsIgnoreCase("Participante")) {
+						if (valorCelulaDataPartida.equalsIgnoreCase("Participante")) {
 							continue;
 						}
 
 						try {
-							final LocalDate partidaDate = LocalDate.parse(stringCellValue,
+							final LocalDate partidaDate = LocalDate.parse(valorCelulaDataPartida,
 									DateTimeFormatter.ofPattern("dd/MM/yy"));
-							final Partida partida = new Partida();
-							partida.setData(partidaDate);
+
+							final Date dataPartida = Dates.localDateToDate(partidaDate);
+							partida = partidaService.findByData(dataPartida);
+							if (partida == null) {
+								partida = new Partida();
+								partida.setData(dataPartida);
+								LOGGER.info("Não existia a partida de " + dataPartida + " criada ainda. Criando....");
+							} else {
+								LOGGER.info("Partida de " + dataPartida + " ja existia. Recuperando....");
+							}
+
 							partidaMap.put(cell.getColumnIndex(), partida);
 							partidas.add(partida);
 						} catch (final DateTimeParseException e) {
-							LOGGER.error("Não consegui converter o valor " + stringCellValue + " no formato dd/MM/yy");
+							LOGGER.error("Não consegui converter o valor " + valorCelulaDataPartida
+									+ " no formato dd/MM/yy");
 						}
 					}
 
 					if (cell.getCellType() == Cell.CELL_TYPE_NUMERIC) {
 						if (DateUtil.isCellDateFormatted(cell)) {
-							final Date localDate = cell.getDateCellValue();
-							final LocalDate partidaDate = asLocalDate(localDate);
-							final Partida partida = new Partida();
-							partida.setData(partidaDate);
+							final Date dataPartida = cell.getDateCellValue();
+							partida = partidaService.findByData(dataPartida);
+							if (partida == null) {
+								partida = new Partida();
+								partida.setData(dataPartida);
+							}
 							partidaMap.put(cell.getColumnIndex(), partida);
 							partidas.add(partida);
 						}
@@ -277,10 +293,6 @@ public class ImportPartidaImpl implements ImportPartida {
 			LOGGER.error("Error", e);
 		}
 
-	}
-
-	private LocalDate asLocalDate(final Date date) {
-		return Instant.ofEpochMilli(date.getTime()).atZone(ZoneId.systemDefault()).toLocalDate();
 	}
 
 }

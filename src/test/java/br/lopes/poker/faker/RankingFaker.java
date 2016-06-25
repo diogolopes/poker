@@ -1,8 +1,10 @@
 package br.lopes.poker.faker;
 
 import java.time.LocalDate;
+import java.util.Date;
 
 import br.lopes.poker.domain.Ranking;
+import br.lopes.poker.helper.Dates;
 
 public class RankingFaker {
 
@@ -18,12 +20,15 @@ public class RankingFaker {
             this.ano = ano;
             this.data = data;
         }
+        public Date getDataAtualizacao(){
+        	return Dates.localDateToDate(data);
+        }
     }
 
     public static Ranking get(final ERanking eRanking) {
         final Ranking ranking = new Ranking();
         ranking.setAno(eRanking.ano);
-        ranking.setDataAtualizacao(eRanking.data);
+        ranking.setDataAtualizacao(eRanking.getDataAtualizacao());
         return ranking;
     }
 }

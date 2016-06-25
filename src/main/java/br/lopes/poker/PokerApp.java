@@ -13,7 +13,6 @@ import br.lopes.poker.domain.Partida;
 import br.lopes.poker.domain.Ranking;
 import br.lopes.poker.service.ClassificacaoService;
 import br.lopes.poker.service.ClassificacaoService.RankingType;
-import br.lopes.poker.service.ExportRanking;
 import br.lopes.poker.service.ImportPartida;
 import br.lopes.poker.service.ImportRanking;
 import br.lopes.poker.service.RankingService;
@@ -32,9 +31,6 @@ public class PokerApp implements CommandLineRunner {
 
 	@Autowired
 	private ClassificacaoService classificacaoService;
-
-	@Autowired
-	private ExportRanking exportRanking;
 
 	public static void main(final String[] args) {
 		SpringApplication.run(PokerApp.class, args);
@@ -58,9 +54,10 @@ public class PokerApp implements CommandLineRunner {
 																				// return
 																				// null
 
-		final Ranking ranking = classificacaoService.ranking(rankingOfYear, new HashSet<>(partidas), RankingType.SALDO);
+		classificacaoService.generateRankingFileByPartidasAndType(rankingOfYear, new HashSet<>(partidas),
+				RankingType.SALDO);
+		classificacaoService.generateRankingFileByType(rankingOfYear, RankingType.APROVEITAMENTO);
 
-		exportRanking.export(ranking);
 	}
 
 }
