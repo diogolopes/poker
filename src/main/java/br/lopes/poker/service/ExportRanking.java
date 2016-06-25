@@ -8,8 +8,8 @@ import br.lopes.poker.domain.Ranking;
 
 public interface ExportRanking {
 
-    void export(final Map<Pessoa, Classificacao> treeMap, final String ano) throws Exception;
+	void export(final Map<Pessoa, Classificacao> treeMap, final Integer ano) throws Exception;
 
-    void export(final Ranking ranking, final String ano) throws Exception;
+	void export(final Ranking ranking) throws Exception;
 
 }

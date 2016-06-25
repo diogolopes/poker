@@ -21,46 +21,46 @@ import br.lopes.poker.service.RankingService;
 @SpringBootApplication
 public class PokerApp implements CommandLineRunner {
 
-    @Autowired
-    private RankingService rankingService;
+	@Autowired
+	private RankingService rankingService;
 
-    @Autowired
-    private ImportRanking importRanking;
+	@Autowired
+	private ImportRanking importRanking;
 
-    @Autowired
-    private ImportPartida importPartida;
+	@Autowired
+	private ImportPartida importPartida;
 
-    @Autowired
-    private ClassificacaoService classificacaoService;
+	@Autowired
+	private ClassificacaoService classificacaoService;
 
-    @Autowired
-    private ExportRanking exportRanking;
+	@Autowired
+	private ExportRanking exportRanking;
 
-    public static void main(final String[] args) {
-        SpringApplication.run(PokerApp.class, args);
-    }
+	public static void main(final String[] args) {
+		SpringApplication.run(PokerApp.class, args);
+	}
 
-    @Override
-    public void run(final String... args) throws Exception {
-        final List<Ranking> importRankings = importRanking.importRankings();
-        final List<Partida> partidas = importPartida.importPartidas();
+	@Override
+	public void run(final String... args) throws Exception {
+		final List<Ranking> importRankings = importRanking.importRankings();
+		final List<Partida> partidas = importPartida.importPartidas();
 
-        final Ranking rankingOfYear = importRankings.stream() // Convert to
-                                                              // steam
-                .filter(r -> r.getAno().equals(LocalDate.now().getYear())) // we
-                                                                           // want
-                                                                           // "michael"
-                                                                           // only
-                .findAny() // If 'findAny' then return found
-                .orElse(rankingService.findByAno(LocalDate.now().getYear())); // If
-                                                                              // not
-                                                                              // found,
-                                                                              // return
-                                                                              // null
+		final Ranking rankingOfYear = importRankings.stream() // Convert to
+																// steam
+				.filter(r -> r.getAno().equals(LocalDate.now().getYear())) // we
+																			// want
+																			// "michael"
+																			// only
+				.findAny() // If 'findAny' then return found
+				.orElse(rankingService.findByAno(LocalDate.now().getYear())); // If
+																				// not
+																				// found,
+																				// return
+																				// null
 
-        final Ranking ranking = classificacaoService.ranking(rankingOfYear, new HashSet<>(partidas), RankingType.SALDO);
-        
-        exportRanking.export(ranking, String.valueOf(LocalDate.now().getYear()));
-    }
+		final Ranking ranking = classificacaoService.ranking(rankingOfYear, new HashSet<>(partidas), RankingType.SALDO);
+
+		exportRanking.export(ranking);
+	}
 
 }
