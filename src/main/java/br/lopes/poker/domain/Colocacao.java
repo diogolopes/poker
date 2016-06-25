@@ -1,6 +1,7 @@
 package br.lopes.poker.domain;
 
 import java.math.BigDecimal;
+import java.math.MathContext;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
@@ -9,9 +10,11 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
+import br.lopes.poker.data.Classificacao;
+
 @Entity
 @Table(uniqueConstraints = @UniqueConstraint(columnNames = { "rankingId", "pessoaId" }))
-public class Colocacao extends AbstractEntity<Integer> {
+public class Colocacao extends AbstractEntity<Integer> implements Classificacao {
 
     private static final long serialVersionUID = 5254083530813241581L;
 
@@ -104,6 +107,16 @@ public class Colocacao extends AbstractEntity<Integer> {
 
     public void setRanking(Ranking ranking) {
         this.ranking = ranking;
+    }
+
+    @Override
+    public BigDecimal getAproveitamento() {
+        return saldo.divide(BigDecimal.valueOf(jogos), MathContext.DECIMAL32);
+    }
+
+    @Override
+    public int getMovimentacao() {
+        return (this.posicaoAnterior != 0) ? (this.posicaoAnterior - this.posicaoAtual) : 0;
     }
 
 }

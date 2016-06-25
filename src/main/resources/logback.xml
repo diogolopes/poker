@@ -63,9 +63,12 @@
 		</rollingPolicy>
 	</appender>
 
+
+
+
 	<root level="INFO">
 		<appender-ref ref="STDOUT" />
-		<appender-ref ref="FILE-AUDIT"/>
+		<appender-ref ref="FILE-AUDIT" />
 	</root>
 
 
