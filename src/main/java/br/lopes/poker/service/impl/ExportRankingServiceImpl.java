@@ -43,7 +43,8 @@ public class ExportRankingServiceImpl implements ExportRanking {
 	}
 
 	@Override
-	public void export(final Map<Pessoa, Classificacao> map, final Integer ano, final RankingType rankingType) throws Exception {
+	public void export(final Map<Pessoa, Classificacao> map, final Integer ano, final RankingType rankingType)
+			throws Exception {
 		if (map == null || map.isEmpty()) {
 			return;
 		}
