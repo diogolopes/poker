@@ -43,16 +43,10 @@ public class PokerApp implements CommandLineRunner {
 
 		final Ranking rankingOfYear = importRankings.stream() // Convert to
 																// steam
-				.filter(r -> r.getAno().equals(LocalDate.now().getYear())) // we
-																			// want
-																			// "michael"
-																			// only
+				.filter(r -> r.getAno().equals(LocalDate.now().getYear()))
+
 				.findAny() // If 'findAny' then return found
-				.orElse(rankingService.findByAno(LocalDate.now().getYear())); // If
-																				// not
-																				// found,
-																				// return
-																				// null
+				.orElse(rankingService.findByAno(LocalDate.now().getYear()));
 
 		classificacaoService.generateRankingFileByPartidasAndType(rankingOfYear, new HashSet<>(partidas),
 				RankingType.SALDO);

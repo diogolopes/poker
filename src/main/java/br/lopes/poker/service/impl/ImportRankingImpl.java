@@ -35,6 +35,7 @@ import br.lopes.poker.domain.Colocacao;
 import br.lopes.poker.domain.Pessoa;
 import br.lopes.poker.domain.Ranking;
 import br.lopes.poker.helper.PokerPaths;
+import br.lopes.poker.helper.PokerPlanilha;
 import br.lopes.poker.service.ColocacaoService;
 import br.lopes.poker.service.ImportRanking;
 import br.lopes.poker.service.PessoaService;
@@ -142,7 +143,7 @@ public class ImportRankingImpl implements ImportRanking {
 
 		int colunaMovimentacao = -1, colunaNome = -1;
 		int colunaposicaoAtual = 0, colunaSaldo = -1, colunaJogos = -1, colunaVitorias = -1, colunaDerrotas = -1,
-				colunaEmpates = -1;
+				colunaEmpates = -1, colunaAproveitamento = -1;
 
 		boolean header = true;
 		for (final Row row : sheet) {
@@ -151,21 +152,30 @@ public class ImportRankingImpl implements ImportRanking {
 					if (colunaMovimentacao != -1 && colunaNome != -1) {
 						break;
 					}
-					if (cell.getStringCellValue().trim().equalsIgnoreCase("nome")) {
+					if (cell.getStringCellValue().trim().equalsIgnoreCase(PokerPlanilha.COLUNA_NOME)) {
 						colunaNome = cell.getColumnIndex();
-					} else if (cell.getStringCellValue().trim().equalsIgnoreCase("movimentação")) {
+					} else if (cell.getStringCellValue().trim().equalsIgnoreCase(PokerPlanilha.COLUNA_MOVIMENTACAO)) {
 						colunaMovimentacao = cell.getColumnIndex();
+					} else if (cell.getStringCellValue().trim().equalsIgnoreCase(PokerPlanilha.COLUNA_PONTUACAO)) {
+						colunaSaldo = cell.getColumnIndex();
+					} else if (cell.getStringCellValue().trim().equalsIgnoreCase(PokerPlanilha.COLUNA_JOGOS)) {
+						colunaJogos = cell.getColumnIndex();
+					} else if (cell.getStringCellValue().trim().equalsIgnoreCase(PokerPlanilha.COLUNA_VITORIAS)) {
+						colunaVitorias = cell.getColumnIndex();
+					} else if (cell.getStringCellValue().trim().equalsIgnoreCase(PokerPlanilha.COLUNA_DERROTAS)) {
+						colunaDerrotas = cell.getColumnIndex();
+					} else if (cell.getStringCellValue().trim().equalsIgnoreCase(PokerPlanilha.COLUNA_EMPATES)) {
+						colunaEmpates = cell.getColumnIndex();
+					} else if (cell.getStringCellValue().trim().equalsIgnoreCase(PokerPlanilha.COLUNA_APROVEITAMENTO)) {
+						colunaAproveitamento = cell.getColumnIndex();
 					}
 				}
-				colunaSaldo = colunaNome + 1;
-				colunaJogos = colunaSaldo + 1;
-				colunaVitorias = colunaJogos + 1;
-				colunaDerrotas = colunaVitorias + 1;
-				colunaEmpates = colunaDerrotas + 1;
+
 				LOGGER.info("colunaposicaoAtual[" + colunaposicaoAtual + "], colunaMovimentacao[" + colunaMovimentacao
 						+ "], colunaNome[" + colunaNome + "], colunaSaldo[" + colunaSaldo + "], colunaJogos["
-						+ colunaJogos + "], colunaVitorias[" + colunaVitorias + "], colunaDerrotas[" + colunaDerrotas
-						+ "], colunaEmpates[" + colunaEmpates + "]");
+						+ colunaJogos + "], colunaAproveitamento[" + colunaAproveitamento + "], colunaVitorias["
+						+ colunaVitorias + "], colunaDerrotas[" + colunaDerrotas + "], colunaEmpates[" + colunaEmpates
+						+ "]");
 				header = false;
 				continue;
 			}

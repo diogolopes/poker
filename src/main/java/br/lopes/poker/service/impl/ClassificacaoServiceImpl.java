@@ -308,7 +308,7 @@ public class ClassificacaoServiceImpl implements ClassificacaoService {
 		final Map<Pessoa, Classificacao> treeMap = rankingCriteriaFactory.create(rankingMap, rankingType);
 		treeMap.putAll(rankingMap);
 		updatePosition(treeMap);
-		exportRanking.export(treeMap, ranking.getAno(), RankingType.APROVEITAMENTO);
+		exportRanking.export(treeMap, ranking.getAno(), rankingType);
 	}
 
 }

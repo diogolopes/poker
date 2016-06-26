@@ -27,6 +27,7 @@ import br.lopes.poker.data.Classificacao;
 import br.lopes.poker.domain.Pessoa;
 import br.lopes.poker.domain.Ranking;
 import br.lopes.poker.helper.PokerPaths;
+import br.lopes.poker.helper.PokerPlanilha;
 import br.lopes.poker.service.ClassificacaoService.RankingType;
 import br.lopes.poker.service.ExportRanking;
 import br.lopes.poker.service.RankingService;
@@ -45,7 +46,7 @@ public class ExportRankingServiceImpl implements ExportRanking {
 	@Override
 	public void export(final Map<Pessoa, Classificacao> map, final Integer ano, final RankingType rankingType)
 			throws Exception {
-		if (map == null || map.isEmpty()) {
+		if ((map == null) || map.isEmpty()) {
 			return;
 		}
 		final Collection<Classificacao> classificacoes = map.values();
@@ -95,7 +96,7 @@ public class ExportRankingServiceImpl implements ExportRanking {
 		return saldoCellStyle;
 	}
 
-	private CellStyle movimentacaoNegativaCellStyle(Workbook wb) {
+	private CellStyle movimentacaoNegativaCellStyle(final Workbook wb) {
 		final Font boldFont = wb.createFont();
 		boldFont.setBold(true);
 		boldFont.setColor(HSSFColor.RED.index);
@@ -110,7 +111,7 @@ public class ExportRankingServiceImpl implements ExportRanking {
 		return cabecalhoCellStyle;
 	}
 
-	private CellStyle movimentacaoPositivaCellStyle(Workbook wb) {
+	private CellStyle movimentacaoPositivaCellStyle(final Workbook wb) {
 		final Font boldFont = wb.createFont();
 		boldFont.setBold(true);
 		boldFont.setColor(HSSFColor.BLUE.index);
@@ -156,6 +157,7 @@ public class ExportRankingServiceImpl implements ExportRanking {
 		sheet.autoSizeColumn(5);
 		sheet.autoSizeColumn(6);
 		sheet.autoSizeColumn(7);
+		sheet.autoSizeColumn(8);
 	}
 
 	private void criaConteudo(final Sheet sheet, final Collection<? extends Classificacao> classificacoes,
@@ -168,85 +170,91 @@ public class ExportRankingServiceImpl implements ExportRanking {
 			final Classificacao classificacao = iterator.next();
 			final Row row = sheet.createRow(linha++);
 
-			Cell cellPosicao = row.createCell(0);
+			final Cell cellPosicao = row.createCell(0);
 			cellPosicao.setCellValue(classificacao.getPosicaoAtual());
 			cellPosicao.setCellStyle(conteudoCellStyle);
 
-			Cell movimentacaoCell = row.createCell(1);
+			final Cell movimentacaoCell = row.createCell(1);
 			if (classificacao.getMovimentacao() > 0) {
 				movimentacaoCell.setCellValue("▲ " + classificacao.getMovimentacao());
 				movimentacaoCell.setCellStyle(movimentacaoPositivaCellStyle);
 			} else if (classificacao.getMovimentacao() < 0) {
-				movimentacaoCell.setCellValue("▼ " + classificacao.getMovimentacao() * -1);
+				movimentacaoCell.setCellValue("▼ " + (classificacao.getMovimentacao() * -1));
 				movimentacaoCell.setCellStyle(movimentacaoNegativaCellStyle);
 			} else {
 				movimentacaoCell.setCellStyle(conteudoCellStyle);
 			}
 
-			Cell nomeCell = row.createCell(2);
+			final Cell nomeCell = row.createCell(2);
 			nomeCell.setCellValue(classificacao.getPessoa().getNome());
 			nomeCell.setCellStyle(conteudoCellStyle);
 
-			Cell saldoCell = row.createCell(3);
+			final Cell saldoCell = row.createCell(3);
 			saldoCell.setCellValue(classificacao.getSaldo().doubleValue());
 			saldoCell.setCellStyle(saldoCellStyle);
 
-			Cell jogosCell = row.createCell(4);
+			final Cell jogosCell = row.createCell(4);
 			jogosCell.setCellValue(classificacao.getJogos());
 			jogosCell.setCellStyle(conteudoCellStyle);
 
-			Cell vitoriaCell = row.createCell(5);
+			final Cell aproveitamentoCell = row.createCell(5);
+			aproveitamentoCell.setCellValue(classificacao.getSaldo().doubleValue() / classificacao.getJogos());
+			aproveitamentoCell.setCellStyle(conteudoCellStyle);
+
+			final Cell vitoriaCell = row.createCell(6);
 			vitoriaCell.setCellValue(classificacao.getVitoria());
 			vitoriaCell.setCellStyle(conteudoCellStyle);
 
-			Cell derrotasCell = row.createCell(6);
+			final Cell derrotasCell = row.createCell(7);
 			derrotasCell.setCellValue(classificacao.getDerrota());
 			derrotasCell.setCellStyle(conteudoCellStyle);
 
-			Cell empatesCell = row.createCell(7);
+			final Cell empatesCell = row.createCell(8);
 			empatesCell.setCellValue(classificacao.getEmpate());
 			empatesCell.setCellStyle(conteudoCellStyle);
-
 		}
 
 	}
 
-	private void criaCabecalho(Sheet sheet, final CellStyle borderCellStyle) {
+	private void criaCabecalho(final Sheet sheet, final CellStyle borderCellStyle) {
 		final Row row = sheet.createRow(0);
 
 		final Cell colocacaoCell = row.createCell(0);
-		colocacaoCell.setCellValue("Colocação");
+		colocacaoCell.setCellValue(PokerPlanilha.COLUNA_COLOCACAO);
 		colocacaoCell.setCellStyle(borderCellStyle);
 
 		final Cell movimentacaoCell = row.createCell(1);
-		movimentacaoCell.setCellValue("Movimentação");
+		movimentacaoCell.setCellValue(PokerPlanilha.COLUNA_MOVIMENTACAO);
 		movimentacaoCell.setCellStyle(borderCellStyle);
 
-		Cell nomeCell = row.createCell(2);
-		nomeCell.setCellValue("Nome");
+		final Cell nomeCell = row.createCell(2);
+		nomeCell.setCellValue(PokerPlanilha.COLUNA_NOME);
 		nomeCell.setCellStyle(borderCellStyle);
 
-		Cell pontuacaoCell = row.createCell(3);
-		pontuacaoCell.setCellValue("Pontuação");
+		final Cell pontuacaoCell = row.createCell(3);
+		pontuacaoCell.setCellValue(PokerPlanilha.COLUNA_PONTUACAO);
 		pontuacaoCell.setCellStyle(borderCellStyle);
 
-		Cell jogosCell = row.createCell(4);
-		jogosCell.setCellValue("Jogos");
+		final Cell jogosCell = row.createCell(4);
+		jogosCell.setCellValue(PokerPlanilha.COLUNA_JOGOS);
 		jogosCell.setCellStyle(borderCellStyle);
 
-		Cell vitoriaCell = row.createCell(5);
-		vitoriaCell.setCellValue("Vitórias");
+		final Cell aproveitamentoCell = row.createCell(5);
+		aproveitamentoCell.setCellValue(PokerPlanilha.COLUNA_APROVEITAMENTO);
+		aproveitamentoCell.setCellStyle(borderCellStyle);
+
+		final Cell vitoriaCell = row.createCell(6);
+		vitoriaCell.setCellValue(PokerPlanilha.COLUNA_VITORIAS);
 		vitoriaCell.setCellStyle(borderCellStyle);
 
-		Cell derrotaCell = row.createCell(6);
-		derrotaCell.setCellValue("Derrotas");
+		final Cell derrotaCell = row.createCell(7);
+		derrotaCell.setCellValue(PokerPlanilha.COLUNA_DERROTAS);
 		derrotaCell.setCellStyle(borderCellStyle);
 
-		Cell empateCell = row.createCell(7);
-		empateCell.setCellValue("Empates");
+		final Cell empateCell = row.createCell(8);
+		empateCell.setCellValue(PokerPlanilha.COLUNA_EMPATES);
 		empateCell.setCellStyle(borderCellStyle);
 
-		// row.createCell(0).setCellStyle(borderCellStyle);
 	}
 
 	@Override
@@ -256,7 +264,7 @@ public class ExportRankingServiceImpl implements ExportRanking {
 
 	@Override
 	public void export(final Ranking ranking, final RankingType rankingType) throws Exception {
-		if (ranking == null || ranking.getColocacoes().isEmpty()) {
+		if ((ranking == null) || ranking.getColocacoes().isEmpty()) {
 			return;
 		}
 		final Ranking findByAno = rankingService.findByAno(ranking.getAno());
