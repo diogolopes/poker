@@ -20,6 +20,7 @@ import br.lopes.poker.domain.Partida;
 import br.lopes.poker.domain.PartidaPessoa;
 import br.lopes.poker.domain.Pessoa;
 import br.lopes.poker.domain.Ranking;
+import br.lopes.poker.helper.Dates;
 import br.lopes.poker.helper.Validator;
 import br.lopes.poker.service.ClassificacaoService;
 import br.lopes.poker.service.ExportRanking;
@@ -185,7 +186,7 @@ public class ClassificacaoServiceImpl implements ClassificacaoService {
 			Validator.validar(
 					"Não encontrou o nome " + partidaPessoa.getPessoa().getNome()
 							+ " no ranking atual que veio da partida do dia " + partidaPessoa.getPartida().getData(),
-					String.valueOf(partidaPessoa.getPartida().getData()));
+					String.valueOf(Dates.dateToLocalDate(partidaPessoa.getPartida().getData()).getYear()));
 			classificacao = new ClassificacaoImpl(partidaPessoa);
 			rankingMap.put(partidaPessoa.getPessoa(), classificacao);
 		}
