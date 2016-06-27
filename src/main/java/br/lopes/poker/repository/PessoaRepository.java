@@ -6,6 +6,6 @@ import br.lopes.poker.domain.Pessoa;
 
 public interface PessoaRepository extends JpaRepository<Pessoa, Integer> {
 
-    Pessoa findByNome(final String nome);
+    Pessoa findByNomeIgnoreCase(final String nome);
 
 }
