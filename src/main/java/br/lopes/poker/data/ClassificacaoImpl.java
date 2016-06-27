@@ -89,9 +89,10 @@ public class ClassificacaoImpl implements Classificacao {
     }
 
     public void update(final PartidaPessoa partidaPessoa) {
-        this.saldo = saldo.add(partidaPessoa.getSaldo()).add(partidaPessoa.getBonus());
+        final BigDecimal saldoPartidaComBonus = partidaPessoa.getSaldo().add(partidaPessoa.getBonus());
+        this.saldo = saldo.add(saldoPartidaComBonus);
         this.jogos++;
-        final int compareTo = saldo.compareTo(BigDecimal.ZERO);
+        final int compareTo = saldoPartidaComBonus.compareTo(BigDecimal.ZERO);
         this.vitoria = (compareTo == 1) ? vitoria + 1 : vitoria;
         this.empate = (compareTo == 0) ? empate + 1 : empate;
         this.derrota = (compareTo == -1) ? derrota + 1 : derrota;

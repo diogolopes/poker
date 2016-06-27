@@ -1,5 +1,6 @@
 package br.lopes.poker.service.impl;
 
+import org.apache.commons.lang3.text.WordUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -19,7 +20,7 @@ public class PessoaServiceImpl implements PessoaService {
 
     @Override
     public Pessoa findByNome(final String nome) {
-        return repository.findByNome(nome);
+        return repository.findByNomeIgnoreCase(WordUtils.capitalizeFully(nome));
     }
 
     @Override

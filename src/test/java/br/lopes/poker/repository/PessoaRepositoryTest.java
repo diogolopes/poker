@@ -67,7 +67,7 @@ public class PessoaRepositoryTest {
 
     @Test
     public void findByNomeTest() {
-        final Pessoa pessoa = repository.findByNome(EPessoa.DIOGO.getNome());
+        final Pessoa pessoa = repository.findByNomeIgnoreCase(EPessoa.DIOGO.getNome());
         assertThat("Objeto não encontrado", pessoa, notNullValue());
     }
 
