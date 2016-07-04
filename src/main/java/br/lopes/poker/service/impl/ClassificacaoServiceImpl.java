@@ -2,6 +2,7 @@ package br.lopes.poker.service.impl;
 
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -82,16 +83,19 @@ public class ClassificacaoServiceImpl implements ClassificacaoService {
     private Ranking transformToRanking(final Ranking ranking, final Map<Pessoa, Classificacao> treeMap) {
         final Iterator<Entry<Pessoa, Classificacao>> classificacaoIterator = treeMap.entrySet().iterator();
 
+        final Set<Colocacao> novasPessoas = new HashSet<>();
+
         while (classificacaoIterator.hasNext()) {
             final Entry<Pessoa, Classificacao> entry = classificacaoIterator.next();
             final Pessoa pessoa = entry.getKey();
             final Classificacao classificacao = entry.getValue();
 
-            Colocacao colocacao = ranking.getColocacoes().stream().filter(c -> c.getPessoa().getNome().equals(pessoa.getNome())).findFirst().orElse(null);
+            Colocacao colocacao = pessoa != null ? ranking.getColocacoes().stream().filter(c -> c.getPessoa().getNome().equals(pessoa.getNome())).findFirst().orElse(null) : null;
 
             if (colocacao == null) {
                 colocacao = new Colocacao();
-                colocacao.setRanking(ranking);
+                colocacao.setPessoa(pessoa);
+                novasPessoas.add(colocacao);
             }
             colocacao.setSaldo(classificacao.getSaldo());
             colocacao.setJogos(classificacao.getJogos());
@@ -101,6 +105,7 @@ public class ClassificacaoServiceImpl implements ClassificacaoService {
             colocacao.setPosicaoAtual(classificacao.getPosicaoAtual());
             colocacao.setPosicaoAnterior(classificacao.getPosicaoAnterior());
         }
+        ranking.addAllColocacao(novasPessoas);
         return ranking;
     }
 
@@ -233,6 +238,10 @@ public class ClassificacaoServiceImpl implements ClassificacaoService {
                     // Quem tiver melhor posicao no ranking anterior
                     if (compareTo == 0) {
                         compareTo = Integer.valueOf(ranking.getPosicaoAnterior()).compareTo(Integer.valueOf(ranking2.getPosicaoAnterior()));
+                    }
+                    // Quem tiver melhor posicao no ranking anterior
+                    if (compareTo == 0) {
+                        return a.getNome().compareTo(b.getNome());
                     }
                 }
             }
