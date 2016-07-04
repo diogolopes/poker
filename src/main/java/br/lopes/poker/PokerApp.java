@@ -19,39 +19,37 @@ import br.lopes.poker.service.RankingService;
 
 @SpringBootApplication
 public class PokerApp implements CommandLineRunner {
+    @Autowired
+    private RankingService rankingService;
 
-	@Autowired
-	private RankingService rankingService;
+    @Autowired
+    private ImportRanking importRanking;
 
-	@Autowired
-	private ImportRanking importRanking;
+    @Autowired
+    private ImportPartida importPartida;
 
-	@Autowired
-	private ImportPartida importPartida;
+    @Autowired
+    private ClassificacaoService classificacaoService;
 
-	@Autowired
-	private ClassificacaoService classificacaoService;
+    public static void main(final String[] args) {
+        SpringApplication.run(PokerApp.class, args);
+    }
 
-	public static void main(final String[] args) {
-		SpringApplication.run(PokerApp.class, args);
-	}
+    @Override
+    public void run(final String... args) throws Exception {
+        final List<Ranking> importRankings = importRanking.importRankings();
+        final List<Partida> partidas = importPartida.importPartidas();
 
-	@Override
-	public void run(final String... args) throws Exception {
-		final List<Ranking> importRankings = importRanking.importRankings();
-		final List<Partida> partidas = importPartida.importPartidas();
+        final Ranking rankingOfYear = importRankings.stream() // Convert to
+                                                              // steam
+                .filter(r -> r.getAno().equals(LocalDate.now().getYear()))
 
-		final Ranking rankingOfYear = importRankings.stream() // Convert to
-																// steam
-				.filter(r -> r.getAno().equals(LocalDate.now().getYear()))
+                .findAny() // If 'findAny' then return found
+                .orElse(rankingService.findByAno(LocalDate.now().getYear()));
 
-				.findAny() // If 'findAny' then return found
-				.orElse(rankingService.findByAno(LocalDate.now().getYear()));
+        classificacaoService.generateRankingFileByPartidasAndType(rankingOfYear, new HashSet<>(partidas), RankingType.SALDO);
+        classificacaoService.generateRankingFileByType(rankingOfYear, RankingType.APROVEITAMENTO);
 
-		classificacaoService.generateRankingFileByPartidasAndType(rankingOfYear, new HashSet<>(partidas),
-				RankingType.SALDO);
-		classificacaoService.generateRankingFileByType(rankingOfYear, RankingType.APROVEITAMENTO);
-
-	}
+    }
 
 }
