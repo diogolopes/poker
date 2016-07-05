@@ -40,12 +40,17 @@ public class ClassificacaoServiceImpl implements ClassificacaoService {
     private ExportRanking exportRanking;
 
     @Override
+    public void generateRankingFileByPartidasAndType(final Ranking ranking, final Set<Partida> partidas) throws Exception {
+        generateRankingFileByPartidasAndType(ranking, partidas, ranking.getRankingType());
+    }
+
+    @Override
     public void generateRankingFileByPartidasAndType(final Ranking ranking, final Set<Partida> partidas, final RankingType rankingType) throws Exception {
         if (ranking == null || partidas.isEmpty()) {
-            LOGGER.info("ranking encontrado[" + ranking + "], partidas.size[" + partidas.size() + "]");
-            exportRanking.export(ranking, rankingType);
+            LOGGER.info("Nenhum ranking encontrado....");
             return;
         }
+
         LOGGER.info("Iniciando reclassificacao do ranking de " + ranking.getAno() + " ultima atualização em " + ranking.getDataAtualizacao() + " para " + partidas.size() + " partidas por "
                 + rankingType.getNome());
 
@@ -78,6 +83,22 @@ public class ClassificacaoServiceImpl implements ClassificacaoService {
 
         final Ranking save = rankingService.save(transformToRanking(ranking, treeMap));
         exportRanking.export(save, rankingType);
+    }
+
+    @Override
+    public void generateRankingFileByType(final Ranking ranking) throws Exception {
+        if (ranking == null) {
+            LOGGER.info("Nenhum ranking encontrado....");
+            return;
+        }
+        final RankingType rankingType = ranking.getRankingType();
+        LOGGER.info("Iniciando reclassificacao do ranking de " + ranking.getAno() + " ultima atualização em " + ranking.getDataAtualizacao() + " por " + rankingType.getNome());
+
+        final Map<Pessoa, Classificacao> rankingMap = transformFromRanking(ranking);
+        final Map<Pessoa, Classificacao> treeMap = rankingCriteriaFactory.create(rankingMap, rankingType);
+        treeMap.putAll(rankingMap);
+        updatePosition(treeMap);
+        exportRanking.export(treeMap, ranking.getAno(), rankingType);
     }
 
     private Ranking transformToRanking(final Ranking ranking, final Map<Pessoa, Classificacao> treeMap) {
@@ -289,22 +310,6 @@ public class ClassificacaoServiceImpl implements ClassificacaoService {
             }
             return compareTo;
         }
-    }
-
-    @Override
-    public void generateRankingFileByType(final Ranking ranking, final RankingType rankingType) throws Exception {
-        if (ranking == null) {
-            LOGGER.info("Nenhum ranking encontrado....");
-            return;
-        }
-        LOGGER.info("Iniciando reclassificacao do ranking de " + ranking.getAno() + " ultima atualização em " + ranking.getDataAtualizacao() + " por " + rankingType.getNome());
-
-        Map<Pessoa, Classificacao> rankingMap = transformFromRanking(ranking);
-
-        final Map<Pessoa, Classificacao> treeMap = rankingCriteriaFactory.create(rankingMap, rankingType);
-        treeMap.putAll(rankingMap);
-        updatePosition(treeMap);
-        exportRanking.export(treeMap, ranking.getAno(), rankingType);
     }
 
 }

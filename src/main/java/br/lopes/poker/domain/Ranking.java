@@ -3,14 +3,17 @@ package br.lopes.poker.domain;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Stream;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.OneToMany;
 import javax.persistence.OrderBy;
+
+import br.lopes.poker.service.ClassificacaoService.RankingType;
 
 @Entity
 public class Ranking extends AbstractEntity<Integer> {
@@ -28,6 +31,10 @@ public class Ranking extends AbstractEntity<Integer> {
             fetch = FetchType.EAGER,
             mappedBy = "ranking")
     private final Set<Colocacao> colocacoes = new HashSet<>();
+
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private RankingType rankingType;
 
     public Set<Colocacao> getColocacoes() {
         return colocacoes;
@@ -47,8 +54,7 @@ public class Ranking extends AbstractEntity<Integer> {
     }
 
     public void addAllColocacao(final Set<Colocacao> colocacoes) {
-        final Stream<Colocacao> stream = colocacoes.stream();
-        stream.forEach(consumer -> {
+        colocacoes.stream().forEach(consumer -> {
             consumer.setRanking(this);
             this.colocacoes.add(consumer);
         });
@@ -58,8 +64,16 @@ public class Ranking extends AbstractEntity<Integer> {
         return ano;
     }
 
-    public void setAno(Integer ano) {
+    public void setAno(final Integer ano) {
         this.ano = ano;
+    }
+
+    public RankingType getRankingType() {
+        return rankingType;
+    }
+
+    public void setRankingType(final RankingType rankingType) {
+        this.rankingType = rankingType;
     }
 
 }

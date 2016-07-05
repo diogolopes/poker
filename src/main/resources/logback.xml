@@ -92,6 +92,7 @@
 	
 	<logger name="br.lopes.poker.service" level="INFO" additivity="false">
 		<appender-ref ref="FILE-AUDIT" />
+		<appender-ref ref="STDOUT" />
 	</logger>
 
 	<logger name="br.lopes.poker" level="ERROR" additivity="false">

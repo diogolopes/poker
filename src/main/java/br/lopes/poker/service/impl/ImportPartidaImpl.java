@@ -21,6 +21,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.transaction.Transactional;
@@ -121,8 +122,10 @@ public class ImportPartidaImpl implements ImportPartida {
             final Workbook wb = WorkbookFactory.create(file);
             final Sheet sheet = wb.getSheetAt(0);
             final Set<Partida> partidas = getPartidas(year, sheet);
+
+            final Optional<Partida> firstPartida = partidas.stream().min((p1, p2) -> p1.getData().compareTo(p2.getData()));
             wb.close();
-            createBackupFile(year, file);
+            createBackupFile(year, file, firstPartida);
             return partidas;
         } catch (final EncryptedDocumentException | InvalidFormatException | IOException e) {
             e.printStackTrace();
@@ -143,7 +146,7 @@ public class ImportPartidaImpl implements ImportPartida {
         for (final Row row : sheet) {
             if (header) {
                 for (final Cell cell : row) {
-                    Partida partida;
+
                     if (cell.getCellType() == Cell.CELL_TYPE_STRING) {
                         final String valorCelulaDataPartida = cell.getStringCellValue().trim();
                         if (valorCelulaDataPartida.equalsIgnoreCase("Sub-total") || valorCelulaDataPartida.equalsIgnoreCase("Sub total")) {
@@ -166,7 +169,6 @@ public class ImportPartidaImpl implements ImportPartida {
                         }
 
                         try {
-
                             final int tamanhoCampoData = valorCelulaDataPartida.trim().length();
                             final LocalDate partidaDate;
                             if (tamanhoCampoData == 8) {
@@ -175,18 +177,8 @@ public class ImportPartidaImpl implements ImportPartida {
                                 partidaDate = LocalDate.parse(valorCelulaDataPartida, DateTimeFormatter.ofPattern("dd/MM/yyyy"));
                             }
 
-                            final Date dataPartida = Dates.localDateToDate(partidaDate);
-                            partida = partidaService.findByData(dataPartida);
-                            if (partida == null) {
-                                partida = new Partida();
-                                partida.setData(dataPartida);
-                                LOGGER.info("Não existia a partida de " + dataPartida + " criada ainda. Criando....");
-                            } else {
-                                LOGGER.info("Partida de " + dataPartida + " ja existia. Recuperando....");
-                            }
-
-                            partidaMap.put(cell.getColumnIndex(), partida);
-                            partidas.add(partida);
+                            final Date dataPartida = Dates.localDateToDateWithoutTime(partidaDate);
+                            createPartida(partidas, partidaMap, cell, dataPartida);
                         } catch (final DateTimeParseException e) {
                             LOGGER.error("Não consegui converter o valor " + valorCelulaDataPartida + " no formato dd/MM/yy");
                         }
@@ -195,13 +187,8 @@ public class ImportPartidaImpl implements ImportPartida {
                     if (cell.getCellType() == Cell.CELL_TYPE_NUMERIC) {
                         if (DateUtil.isCellDateFormatted(cell)) {
                             final Date dataPartida = cell.getDateCellValue();
-                            partida = partidaService.findByData(dataPartida);
-                            if (partida == null) {
-                                partida = new Partida();
-                                partida.setData(dataPartida);
-                            }
-                            partidaMap.put(cell.getColumnIndex(), partida);
-                            partidas.add(partida);
+                            final Date localDateToDateWithoutTime = Dates.localDateToDateWithoutTime(Dates.dateToLocalDate(dataPartida));
+                            createPartida(partidas, partidaMap, cell, localDateToDateWithoutTime);
                         }
                     }
 
@@ -235,6 +222,23 @@ public class ImportPartidaImpl implements ImportPartida {
         }
         Validator.validarSaldo(year, saldoMap);
         return partidas;
+    }
+
+    private void createPartida(final Set<Partida> partidas, final Map<Integer, Partida> partidaMap, final Cell cell, final Date dataPartida) {
+
+        final Partida partidaExistente = partidaService.findByData(dataPartida);
+        if (partidaExistente != null) {
+            partidaService.delete(partidaExistente);
+            LOGGER.info("Partida de " + dataPartida + " ja existia. Deletando e recriando...");
+        } else {
+            LOGGER.info("Não existia a partida de " + dataPartida + " criada ainda. Criando....");
+        }
+
+        final Partida partida = new Partida();
+        partida.setData(dataPartida);
+
+        partidaMap.put(cell.getColumnIndex(), partida);
+        partidas.add(partida);
     }
 
     private BigDecimal getBigDecimalFromCell(final Cell cell) {
@@ -279,14 +283,22 @@ public class ImportPartidaImpl implements ImportPartida {
         return pessoa;
     }
 
-    private void createBackupFile(final String year, final File file) {
-        final String fileName = FilenameUtils.getBaseName(file.getName()) + LocalDateTime.now().format(DateTimeFormatter.ofPattern(" dd-MM-yyyy hh-mm-ss")) + "."
-                + FilenameUtils.getExtension(file.getName());
+    private void createBackupFile(final String year, final File file, final Optional<Partida> partida) {
+        final String partidaDate = partida.isPresent() ? Dates.dateToLocalDate(partida.get().getData()).format(DateTimeFormatter.ofPattern(" MM-dd-yyyy"))
+                : LocalDateTime.now().format(DateTimeFormatter.ofPattern(" MM-dd-yyyy"));
+        final String fileName = PokerPaths.POKER_PARTIDA_FILE + partidaDate + "." + FilenameUtils.getExtension(file.getName());
 
         Path targetPath = new File(PokerPaths.POKER_PARTIDA_BACKUP_FOLDER + "/" + year + "/" + fileName).toPath();
         try {
             if (!Files.exists(targetPath)) {
                 Files.createDirectories(targetPath);
+            } else {
+                int i = 1;
+                while (Files.exists(targetPath)) {
+                    targetPath = new File(PokerPaths.POKER_PARTIDA_BACKUP_FOLDER + "/" + year + "/" + PokerPaths.POKER_PARTIDA_FILE + partidaDate + " (" + i + ")."
+                            + FilenameUtils.getExtension(file.getName())).toPath();
+                    i++;
+                }
             }
             LOGGER.info("Gerando o backup de " + file + " para " + targetPath);
             Files.move(file.toPath(), targetPath, StandardCopyOption.REPLACE_EXISTING);

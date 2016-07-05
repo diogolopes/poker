@@ -13,5 +13,7 @@ public interface PartidaService {
 
     List<Partida> save(final Collection<Partida> partidas);
 
-	Partida findByData(final Date data);
+    Partida findByData(final Date data);
+
+    void delete(final Partida partida);
 }
