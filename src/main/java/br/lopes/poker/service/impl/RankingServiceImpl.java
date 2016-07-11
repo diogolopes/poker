@@ -67,4 +67,9 @@ public class RankingServiceImpl implements RankingService {
         return repository.save(clonedRanking);
     }
 
+    @Override
+    public Ranking findById(final Integer id) {
+        return repository.getOne(id);
+    }
+
 }

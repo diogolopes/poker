@@ -20,7 +20,9 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import br.lopes.poker.data.Classificacao;
 import br.lopes.poker.domain.Pessoa;
@@ -29,9 +31,13 @@ import br.lopes.poker.helper.PokerPaths;
 import br.lopes.poker.helper.PokerPlanilha;
 import br.lopes.poker.service.ClassificacaoService.RankingType;
 import br.lopes.poker.service.ExportRanking;
+import br.lopes.poker.service.RankingService;
 
 @Service
 public class ExportRankingServiceImpl implements ExportRanking {
+
+    @Autowired
+    private RankingService rankingService;
 
     private String getFilename(final RankingType rankingType) {
         return "Ranking PDS (" + rankingType.getNome() + ") " + LocalDate.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")) + ".xlsx";
@@ -252,13 +258,19 @@ public class ExportRankingServiceImpl implements ExportRanking {
         export(ranking, RankingType.SALDO);
     }
 
+    @Transactional
     @Override
     public void export(final Ranking ranking, final RankingType rankingType) throws Exception {
-        if ((ranking == null) || ranking.getColocacoes().isEmpty()) {
+        if (ranking == null) {
             return;
         }
+        final Ranking currentRanking = rankingService.findById(ranking.getId());
+
         // final Ranking findByAno = rankingService.findByAno(ranking.getAno());
-        final Collection<? extends Classificacao> classificacoes = ranking.getColocacoes();
+        final Collection<? extends Classificacao> classificacoes = currentRanking.getColocacoes();
+        if (classificacoes.isEmpty()) {
+            return;
+        }
         generateRankingFile(ranking.getAno(), classificacoes, rankingType);
 
     }

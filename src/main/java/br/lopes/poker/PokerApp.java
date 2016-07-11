@@ -48,21 +48,21 @@ public class PokerApp implements CommandLineRunner {
             if (optionalMaxRaking.isPresent()) {
                 final Ranking ranking = optionalMaxRaking.get();
                 classificacaoService.generateRankingFileByPartidasAndType(ranking, new HashSet<>(partidas));
-                classificacaoService.generateRankingFileByPartidasAndType(ranking, new HashSet<>(partidas));
+                //classificacaoService.generateRankingFileByPartidasAndType(ranking, new HashSet<>(partidas));
             } else {
                 final Ranking lastRankingBySaldo = rankingService.findByAno(LocalDate.now().getYear(), RankingType.SALDO);
-                final Ranking lastRankingByAproveitamento = rankingService.findByAno(LocalDate.now().getYear(), RankingType.APROVEITAMENTO);
+                //final Ranking lastRankingByAproveitamento = rankingService.findByAno(LocalDate.now().getYear(), RankingType.APROVEITAMENTO);
 
                 final Ranking rankingBySaldo = rankingService.clone(lastRankingBySaldo);
-                final Ranking rankingByAproveitamento = rankingService.clone(lastRankingByAproveitamento);
+                //final Ranking rankingByAproveitamento = rankingService.clone(lastRankingByAproveitamento);
                 classificacaoService.generateRankingFileByPartidasAndType(rankingBySaldo, new HashSet<>(partidas), RankingType.SALDO);
-                classificacaoService.generateRankingFileByPartidasAndType(rankingByAproveitamento, new HashSet<>(partidas), RankingType.APROVEITAMENTO);
+                //classificacaoService.generateRankingFileByPartidasAndType(rankingByAproveitamento, new HashSet<>(partidas), RankingType.APROVEITAMENTO);
             }
         } else {
             final Ranking rankingBySaldo = rankingService.findByAno(LocalDate.now().getYear(), RankingType.SALDO);
-            final Ranking rankingByAproveitamento = rankingService.findByAno(LocalDate.now().getYear(), RankingType.APROVEITAMENTO);
+            //final Ranking rankingByAproveitamento = rankingService.findByAno(LocalDate.now().getYear(), RankingType.APROVEITAMENTO);
             classificacaoService.generateRankingFileByType(rankingBySaldo);
-            classificacaoService.generateRankingFileByType(rankingByAproveitamento);
+            //classificacaoService.generateRankingFileByType(rankingByAproveitamento);
         }
 
     }

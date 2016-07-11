@@ -10,12 +10,16 @@ import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
+import javax.persistence.NamedAttributeNode;
+import javax.persistence.NamedEntityGraph;
 import javax.persistence.OneToMany;
 import javax.persistence.OrderBy;
 
 import br.lopes.poker.service.ClassificacaoService.RankingType;
 
 @Entity
+@NamedEntityGraph(name = "RankingWithColocacao",
+        attributeNodes = { @NamedAttributeNode(value = "colocacoes") })
 public class Ranking extends AbstractEntity<Integer> {
 
     private static final long serialVersionUID = -7229048611382540986L;

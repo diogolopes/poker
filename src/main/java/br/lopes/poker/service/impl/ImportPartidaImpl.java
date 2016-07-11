@@ -110,7 +110,12 @@ public class ImportPartidaImpl implements ImportPartida {
     private Set<Partida> createPartidasFromFiles(final String year, final File[] listFiles) {
         Validator.deletarArquivo(year);
         if (listFiles.length > 0) {
-            return createPartidasFromFile(year, listFiles[0]);
+            final Set<Partida> partidas = new HashSet<>();
+            for (int i = 0; i < listFiles.length; i++) {
+                final Set<Partida> importPartidas = createPartidasFromFile(year, listFiles[i]);
+                partidas.addAll(importPartidas);
+            }
+            return partidas;
         }
         LOGGER.info("Diretório " + year + " não tem nenhum arquivo com extensão: xlsx ou xls");
         return null;
@@ -203,10 +208,11 @@ public class ImportPartidaImpl implements ImportPartida {
                 final Integer column = entry.getKey();
                 final Partida partida = entry.getValue();
 
-                final String nome = row.getCell(0).getStringCellValue();
-                if (StringUtils.isEmpty(nome)) {
+                if (row.getCell(0) == null || StringUtils.isEmpty(row.getCell(0).getStringCellValue())) {
                     break;
                 }
+
+                final String nome = row.getCell(0).getStringCellValue();
                 final Pessoa pessoa = getPessoa(nome.trim());
 
                 BigDecimal saldo = getBigDecimalFromCell(row.getCell(column));
@@ -242,6 +248,9 @@ public class ImportPartidaImpl implements ImportPartida {
     }
 
     private BigDecimal getBigDecimalFromCell(final Cell cell) {
+        if (cell == null) {
+            return null;
+        }
         BigDecimal saldo;
         if (cell.getCellType() == Cell.CELL_TYPE_NUMERIC) {
             saldo = BigDecimal.valueOf(cell.getNumericCellValue());

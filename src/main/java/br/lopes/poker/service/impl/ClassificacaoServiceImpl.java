@@ -56,25 +56,10 @@ public class ClassificacaoServiceImpl implements ClassificacaoService {
 
         Map<Pessoa, Classificacao> rankingMap = transformFromRanking(ranking);
 
-        // final Iterator<Entry<Pessoa, Classificacao>> iterator =
-        // rankingMap.entrySet().iterator();
-        //
-        // while (iterator.hasNext()) {
-        // final Entry<Pessoa, Classificacao> entry = iterator.next();
-        // final Classificacao value = entry.getValue();
-        // System.out.println(value);
-        // }
-        // System.out.println("");
         LOGGER.info("Processando " + partidas.size() + " novas partidas para o ranking.");
 
         for (final Partida partida : partidas) {
             rankingMap = getRankingMap(partida, rankingMap);
-
-            /*
-             * final Map<Pessoa, Classificacao> treeMap =
-             * rankingCriteriaFactory.create(rankingMap, rankingType);
-             * treeMap.putAll(rankingMap); updatePosition(treeMap);
-             */
         }
 
         final Map<Pessoa, Classificacao> treeMap = rankingCriteriaFactory.create(rankingMap, rankingType);

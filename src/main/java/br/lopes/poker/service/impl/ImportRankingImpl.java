@@ -223,7 +223,6 @@ public class ImportRankingImpl implements ImportRanking {
 
     private void createBackupFile(final String year, final File file) {
         final String fileName = PokerPaths.POKER_RANKING_FILE + LocalDateTime.now().format(DateTimeFormatter.ofPattern(" MM-dd-yyyy")) + "." + FilenameUtils.getExtension(file.getName());
-
         Path targetPath = new File(PokerPaths.POKER_RANKING_BACKUP_FOLDER + "/" + year + "/" + fileName).toPath();
         try {
             if (!Files.exists(targetPath)) {
@@ -231,7 +230,9 @@ public class ImportRankingImpl implements ImportRanking {
             } else {
                 int i = 1;
                 while (Files.exists(targetPath)) {
-                    targetPath = new File(PokerPaths.POKER_RANKING_BACKUP_FOLDER + "/" + year + "/" + fileName + " (" + i + ")").toPath();
+                    targetPath = new File(PokerPaths.POKER_RANKING_BACKUP_FOLDER + "/" + year + "/" + PokerPaths.POKER_RANKING_FILE
+                            + LocalDateTime.now().format(DateTimeFormatter.ofPattern(" MM-dd-yyyy")) + " (" + i + ")." + FilenameUtils.getExtension(file.getName())).toPath();
+                    i++;
                 }
             }
             LOGGER.info("Gerando o backup de " + file + " para " + targetPath);
