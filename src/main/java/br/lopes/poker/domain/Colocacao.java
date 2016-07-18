@@ -1,7 +1,7 @@
 package br.lopes.poker.domain;
 
 import java.math.BigDecimal;
-import java.math.MathContext;
+import java.math.RoundingMode;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
@@ -111,7 +111,7 @@ public class Colocacao extends AbstractEntity<Integer> implements Classificacao 
 
     @Override
     public BigDecimal getAproveitamento() {
-        return saldo.divide(BigDecimal.valueOf(jogos), MathContext.DECIMAL32);
+        return saldo.divide(BigDecimal.valueOf(jogos), 2, RoundingMode.DOWN);
     }
 
     @Override

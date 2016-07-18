@@ -40,7 +40,7 @@ public class ExportRankingServiceImpl implements ExportRanking {
     private RankingService rankingService;
 
     private String getFilename(final RankingType rankingType) {
-        return "Ranking PDS (" + rankingType.getNome() + ") " + LocalDate.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy")) + ".xlsx";
+        return "Ranking PDS (" + rankingType.getNome() + ") " + LocalDate.now().format(DateTimeFormatter.ofPattern("MM-dd-yyyy")) + ".xlsx";
     }
 
     @Override
@@ -194,7 +194,10 @@ public class ExportRankingServiceImpl implements ExportRanking {
             jogosCell.setCellStyle(conteudoCellStyle);
 
             final Cell aproveitamentoCell = row.createCell(5);
-            aproveitamentoCell.setCellValue(classificacao.getSaldo().doubleValue() / classificacao.getJogos());
+            
+            double doubleValue = classificacao.getAproveitamento().doubleValue();
+            
+            aproveitamentoCell.setCellValue(doubleValue);
             aproveitamentoCell.setCellStyle(conteudoCellStyle);
 
             final Cell vitoriaCell = row.createCell(6);

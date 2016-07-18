@@ -1,7 +1,7 @@
 package br.lopes.poker.data;
 
 import java.math.BigDecimal;
-import java.math.MathContext;
+import java.math.RoundingMode;
 
 import br.lopes.poker.domain.Colocacao;
 import br.lopes.poker.domain.PartidaPessoa;
@@ -85,7 +85,7 @@ public class ClassificacaoImpl implements Classificacao {
     }
 
     public BigDecimal getAproveitamento() {
-        return saldo.divide(BigDecimal.valueOf(jogos), MathContext.DECIMAL32);
+        return saldo.divide(BigDecimal.valueOf(jogos), 2, RoundingMode.HALF_DOWN);
     }
 
     public void update(final PartidaPessoa partidaPessoa) {
