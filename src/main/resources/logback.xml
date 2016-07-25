@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
+	
 
 	<logger name="com.vaadin.server.communication" level="ERROR" />
 	<logger name="org.springframework" level="ERROR" />
@@ -12,22 +13,44 @@
 	<logger name="org.jboss" level="ERROR" />
 	<logger name="org.xnio" level="ERROR" />
 	<logger name="/" level="ERROR" />
-	<logger name="org.hibernate.SQL" level="DEBUG" />
-
+	
 	<property name="DEV_HOME" value="c:/poker/log" />
+	
+
 
 	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
 		<encoder>
 			<pattern>%-5level %logger - %msg\n</pattern>
 		</encoder>
 	</appender>
+	
+	<appender name="FILE-HIBERNATE"
+		class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${DEV_HOME}/sql.log</file>
+		<encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+			<Pattern>
+				%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n
+			</Pattern>
+		</encoder>
 
+		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<!-- rollover daily -->
+			<fileNamePattern>${DEV_HOME}/archived/sql.%d{yyyy-MM-dd}.%i.log
+			</fileNamePattern>
+			<timeBasedFileNamingAndTriggeringPolicy
+				class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+				<maxFileSize>10MB</maxFileSize>
+			</timeBasedFileNamingAndTriggeringPolicy>
+		</rollingPolicy>
+
+	</appender>
+	
 	<appender name="FILE-AUDIT"
 		class="ch.qos.logback.core.rolling.RollingFileAppender">
 		<file>${DEV_HOME}/poker.log</file>
 		<encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
 			<Pattern>
-				%d{yyyy-MM-dd HH:mm:ss} - %msg%n
+				%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n
 			</Pattern>
 		</encoder>
 
@@ -48,7 +71,7 @@
 		<file>${DEV_HOME}/error.log</file>
 		<encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
 			<Pattern>
-				%d{yyyy-MM-dd HH:mm:ss} - %msg%n
+				%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n
 			</Pattern>
 		</encoder>
 
@@ -63,12 +86,21 @@
 		</rollingPolicy>
 	</appender>
 
+	<logger name="org.hibernate.SQL" level="DEBUG" additivity="false">
+		<appender-ref ref="FILE-HIBERNATE" />
+	</logger>
+	
+	<logger name="br.lopes.poker.service" level="INFO" additivity="false">
+		<appender-ref ref="FILE-AUDIT" />
+		<appender-ref ref="STDOUT" />
+	</logger>
 
-
+	<logger name="br.lopes.poker" level="ERROR" additivity="false">
+		<appender-ref ref="FILE-ERROR" />
+	</logger>
 
 	<root level="INFO">
 		<appender-ref ref="STDOUT" />
-		<appender-ref ref="FILE-AUDIT" />
 	</root>
 
 

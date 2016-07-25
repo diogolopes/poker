@@ -8,4 +8,6 @@ public interface PokerPaths {
 	public static final String POKER_RANKING_GERADO_FOLDER = POKER_RANKING_FOLDER + "/gerado";
 	public static final String POKER_RANKING_ENTRADA_FOLDER = POKER_RANKING_FOLDER + "/entrada";
 	public static final String POKER_RANKING_BACKUP_FOLDER = POKER_RANKING_FOLDER + "/backup";
+	public static final String POKER_PARTIDA_FILE = "Partida (PDS)";
+	public static final String POKER_RANKING_FILE = "Ranking (PDS)";
 }
