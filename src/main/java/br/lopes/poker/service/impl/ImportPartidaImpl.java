@@ -61,6 +61,8 @@ public class ImportPartidaImpl implements ImportPartida {
     @Autowired
     private PartidaService partidaService;
 
+    private Set<PlayerValidator> playerValidatorSet = new HashSet<>();
+
     @Override
     @Transactional
     public List<Partida> importPartidas() {
@@ -126,10 +128,21 @@ public class ImportPartidaImpl implements ImportPartida {
             LOGGER.info("Iniciando o processamento da partida " + file);
             final Workbook wb = WorkbookFactory.create(file);
             final Sheet sheet = wb.getSheetAt(0);
-            final Set<Partida> partidas = getPartidas(year, sheet);
+            final boolean forceCreatePlayer = file.getName().contains("force-import");
+            final Set<Partida> partidas = getPartidas(year, sheet, forceCreatePlayer);
 
             final Optional<Partida> firstPartida = partidas.stream().min((p1, p2) -> p1.getData().compareTo(p2.getData()));
             wb.close();
+
+            if (partidas.isEmpty() && !forceCreatePlayer && !playerValidatorSet.isEmpty()) {
+                final String filePath = FilenameUtils.getFullPath(file.getAbsolutePath());
+                final String fileName = FilenameUtils.getBaseName(file.getName()) + " force-import.";
+                final String fileExtension = FilenameUtils.getExtension(file.getName());
+                final Path targetPath = new File(filePath + "/" + fileName + fileExtension).toPath();
+                Files.move(file.toPath(), targetPath, StandardCopyOption.REPLACE_EXISTING);
+                return java.util.Collections.emptySet();
+            }
+
             createBackupFile(year, file, firstPartida);
             return partidas;
         } catch (final EncryptedDocumentException | InvalidFormatException | IOException e) {
@@ -138,9 +151,8 @@ public class ImportPartidaImpl implements ImportPartida {
         return java.util.Collections.emptySet();
     }
 
-    private Set<Partida> getPartidas(final String year, final Sheet sheet) {
-        final Set<Partida> partidas = new HashSet<Partida>();
-        final Map<Integer, Partida> partidaMap = new HashMap<>();
+    private Set<Partida> getPartidas(final String year, final Sheet sheet, final boolean forceCreatePlayer) {
+        final Set<Partida> partidas = new HashSet<Partida>();   final Map<Integer, Partida> partidaMap = new HashMap<>();
         final Map<Pessoa, Saldo> saldoMap = new HashMap<>();
 
         int subTotalIndex = -1;
@@ -213,7 +225,7 @@ public class ImportPartidaImpl implements ImportPartida {
                 }
 
                 final String nome = row.getCell(0).getStringCellValue();
-                final Pessoa pessoa = getPessoa(nome.trim());
+                final Pessoa pessoa = getPessoa(nome.trim(), forceCreatePlayer, partida);
 
                 BigDecimal saldo = getBigDecimalFromCell(row.getCell(column));
 
@@ -226,7 +238,15 @@ public class ImportPartidaImpl implements ImportPartida {
             }
 
         }
-        Validator.validarSaldo(year, saldoMap);
+        if (!forceCreatePlayer && !playerValidatorSet.isEmpty()) {
+            for (final PlayerValidator playerValidator : playerValidatorSet) {
+                Validator.validar("Não encontrou o nome " + playerValidator.getNome() + " no ranking atual que veio da partida do dia " + playerValidator.getPartida().getData(),
+                        String.valueOf(Dates.dateToLocalDate(playerValidator.getPartida().getData()).getYear()));
+            }
+            return Collections.emptySet();
+        } else {
+            Validator.validarSaldo(year, saldoMap);
+        }
         return partidas;
     }
 
@@ -282,12 +302,17 @@ public class ImportPartidaImpl implements ImportPartida {
 
     }
 
-    private Pessoa getPessoa(final String nome) {
+    private Pessoa getPessoa(final String nome, final boolean forceCreatePlayer, final Partida partida) {
         Pessoa pessoa = pessoaService.findByNome(nome);
         if (pessoa == null) {
-            pessoa = new Pessoa();
-            pessoa.setNome(WordUtils.capitalizeFully(nome));
-            pessoa = pessoaService.save(pessoa);
+            final String playerName = WordUtils.capitalizeFully(nome);
+            if (forceCreatePlayer) {
+                pessoa = new Pessoa();
+                pessoa.setNome(playerName);
+                pessoa = pessoaService.save(pessoa);
+            } else {
+                playerValidatorSet.add(new PlayerValidator(playerName, partida));
+            }
         }
         return pessoa;
     }
@@ -315,6 +340,24 @@ public class ImportPartidaImpl implements ImportPartida {
             LOGGER.error("Error", e);
         }
 
+    }
+
+    private class PlayerValidator {
+        private final String nome;
+        private final Partida partida;
+
+        public PlayerValidator(final String nome, final Partida partida) {
+            this.nome = nome;
+            this.partida = partida;
+        }
+
+        public String getNome() {
+            return nome;
+        }
+
+        public Partida getPartida() {
+            return partida;
+        }
     }
 
 }
