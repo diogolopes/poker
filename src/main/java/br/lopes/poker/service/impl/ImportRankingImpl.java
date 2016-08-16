@@ -146,9 +146,9 @@ public class ImportRankingImpl implements ImportRanking {
         for (final Row row : sheet) {
             if (header) {
                 for (final Cell cell : row) {
-                    if (colunaMovimentacao != -1 && colunaNome != -1) {
+                    /*if (colunaMovimentacao != -1 && colunaNome != -1) {
                         break;
-                    }
+                    }*/
                     if (cell.getStringCellValue().trim().equalsIgnoreCase(PokerPlanilha.COLUNA_NOME)) {
                         colunaNome = cell.getColumnIndex();
                     } else if (cell.getStringCellValue().trim().equalsIgnoreCase(PokerPlanilha.COLUNA_MOVIMENTACAO)) {
