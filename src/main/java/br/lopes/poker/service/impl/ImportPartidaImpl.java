@@ -53,6 +53,8 @@ import br.lopes.poker.service.PessoaService;
 
 @Service
 public class ImportPartidaImpl implements ImportPartida {
+    private static final String FORCE_IMPORT = "force-import";
+
     private static final Logger LOGGER = org.slf4j.LoggerFactory.getLogger(ImportPartidaImpl.class);
 
     @Autowired
@@ -128,7 +130,7 @@ public class ImportPartidaImpl implements ImportPartida {
             LOGGER.info("Iniciando o processamento da partida " + file);
             final Workbook wb = WorkbookFactory.create(file);
             final Sheet sheet = wb.getSheetAt(0);
-            final boolean forceCreatePlayer = file.getName().contains("force-import");
+            final boolean forceCreatePlayer = file.getName().contains(FORCE_IMPORT);
             final Set<Partida> partidas = getPartidas(year, sheet, forceCreatePlayer);
 
             final Optional<Partida> firstPartida = partidas.stream().min((p1, p2) -> p1.getData().compareTo(p2.getData()));
@@ -136,9 +138,8 @@ public class ImportPartidaImpl implements ImportPartida {
 
             if (partidas.isEmpty() && !forceCreatePlayer && !playerValidatorSet.isEmpty()) {
                 final String filePath = FilenameUtils.getFullPath(file.getAbsolutePath());
-                final String fileName = FilenameUtils.getBaseName(file.getName()) + " force-import.";
-                final String fileExtension = FilenameUtils.getExtension(file.getName());
-                final Path targetPath = new File(filePath + "/" + fileName + fileExtension).toPath();
+                final String fileName = PokerPaths.POKER_PARTIDA_FILE + " " + FORCE_IMPORT + "." + FilenameUtils.getExtension(file.getName());
+                final Path targetPath = new File(filePath + "/" + fileName).toPath();
                 Files.move(file.toPath(), targetPath, StandardCopyOption.REPLACE_EXISTING);
                 return java.util.Collections.emptySet();
             }
@@ -152,7 +153,8 @@ public class ImportPartidaImpl implements ImportPartida {
     }
 
     private Set<Partida> getPartidas(final String year, final Sheet sheet, final boolean forceCreatePlayer) {
-        final Set<Partida> partidas = new HashSet<Partida>();   final Map<Integer, Partida> partidaMap = new HashMap<>();
+        final Set<Partida> partidas = new HashSet<Partida>();
+        final Map<Integer, Partida> partidaMap = new HashMap<>();
         final Map<Pessoa, Saldo> saldoMap = new HashMap<>();
 
         int subTotalIndex = -1;
@@ -171,7 +173,8 @@ public class ImportPartidaImpl implements ImportPartida {
                             continue;
                         }
 
-                        if (valorCelulaDataPartida.equalsIgnoreCase("Bônus") || valorCelulaDataPartida.equalsIgnoreCase("Bonus")) {
+                        if (valorCelulaDataPartida.equalsIgnoreCase("Bônus") || valorCelulaDataPartida.equalsIgnoreCase("Bonus") || valorCelulaDataPartida.contains("Bonus")
+                                || valorCelulaDataPartida.contains("Bônus")) {
                             bonusIndex = cell.getColumnIndex();
                             continue;
                         }
