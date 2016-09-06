@@ -27,4 +27,14 @@ public class PessoaServiceImpl implements PessoaService {
     public Pessoa save(final Pessoa pessoa) {
         return repository.save(pessoa);
     }
+
+    @Override
+    public Pessoa findByCodigo(final Integer codigo) {
+        return repository.findByCodigo(codigo);
+    }
+
+    @Override
+    public Integer getMaxCodigo() {
+        return repository.getMaxCodigo();
+    }
 }

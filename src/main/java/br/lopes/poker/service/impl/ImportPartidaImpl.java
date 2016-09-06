@@ -21,6 +21,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.Optional;
 import java.util.Set;
 
@@ -46,6 +47,7 @@ import br.lopes.poker.domain.Partida;
 import br.lopes.poker.domain.Pessoa;
 import br.lopes.poker.helper.Dates;
 import br.lopes.poker.helper.PokerPaths;
+import br.lopes.poker.helper.Sheets;
 import br.lopes.poker.helper.Validator;
 import br.lopes.poker.service.ImportPartida;
 import br.lopes.poker.service.PartidaService;
@@ -65,9 +67,12 @@ public class ImportPartidaImpl implements ImportPartida {
 
     private Set<PlayerValidator> playerValidatorSet = new HashSet<>();
 
+    private AtomicInteger atomicInteger;
+    
     @Override
     @Transactional
     public List<Partida> importPartidas() {
+        atomicInteger = new AtomicInteger(pessoaService.getMaxCodigo());
         final Collection<File> partidaFiles = searchFromPartidaDirectory();
         final Set<Partida> partidasSet = new HashSet<>();
         for (final File file : partidaFiles) {
@@ -157,9 +162,7 @@ public class ImportPartidaImpl implements ImportPartida {
         final Map<Integer, Partida> partidaMap = new HashMap<>();
         final Map<Pessoa, Saldo> saldoMap = new HashMap<>();
 
-        int subTotalIndex = -1;
-        int bonusIndex = -1;
-        int totalIndex = -1;
+        int subTotalIndex = -1, bonusIndex = -1, totalIndex = -1, codigoIndex = -1, participanteIndex = -1;
 
         boolean header = true;
         for (final Row row : sheet) {
@@ -184,7 +187,16 @@ public class ImportPartidaImpl implements ImportPartida {
                             continue;
                         }
 
+                        
+
+                        if (valorCelulaDataPartida.equalsIgnoreCase("CÓDIGO")) {
+                            codigoIndex = cell.getColumnIndex();
+                            continue;
+                        }
+
+                        
                         if (valorCelulaDataPartida.equalsIgnoreCase("Participante")) {
+                            participanteIndex = cell.getColumnIndex();
                             continue;
                         }
 
@@ -223,17 +235,18 @@ public class ImportPartidaImpl implements ImportPartida {
                 final Integer column = entry.getKey();
                 final Partida partida = entry.getValue();
 
-                if (row.getCell(0) == null || StringUtils.isEmpty(row.getCell(0).getStringCellValue())) {
+                if (row.getCell(participanteIndex) == null || StringUtils.isEmpty(row.getCell(participanteIndex).getStringCellValue())) {
                     break;
                 }
 
-                final String nome = row.getCell(0).getStringCellValue();
-                final Pessoa pessoa = getPessoa(nome.trim(), forceCreatePlayer, partida);
+                final Integer codigo = Sheets.getIntegerValue(row.getCell(codigoIndex));
+                final String nome = row.getCell(participanteIndex).getStringCellValue();
+                final Pessoa pessoa = getPessoa(codigo, nome.trim(), forceCreatePlayer, partida);
 
-                BigDecimal saldo = getBigDecimalFromCell(row.getCell(column));
+                final BigDecimal saldo = Sheets.getBigDecimalValue(row.getCell(column));
 
                 if (saldo != null) {
-                    final BigDecimal bonus = getBigDecimalFromCell(row.getCell(bonusIndex));
+                    final BigDecimal bonus = Sheets.getBigDecimalValue(row.getCell(bonusIndex));
                     updateSaldoPessoa(pessoa, saldoMap, saldo, row.getCell(subTotalIndex), bonus, row.getCell(totalIndex));
                     partida.addPessoa(pessoa, saldo, BigDecimal.ONE);
                 }
@@ -270,53 +283,39 @@ public class ImportPartidaImpl implements ImportPartida {
         partidas.add(partida);
     }
 
-    private BigDecimal getBigDecimalFromCell(final Cell cell) {
-        if (cell == null) {
-            return null;
-        }
-        BigDecimal saldo;
-        if (cell.getCellType() == Cell.CELL_TYPE_NUMERIC) {
-            saldo = BigDecimal.valueOf(cell.getNumericCellValue());
-        } else {
-            String saldoString = cell.getStringCellValue();
-            saldoString = saldoString.trim();
-            saldoString = saldoString.replace(",", ".");
-            saldoString = saldoString.replace("+", "");
-
-            if (saldoString.equals("-") || saldoString.equals("")) {
-                saldo = null;
-            } else {
-                saldo = new BigDecimal(saldoString);
-            }
-        }
-        return saldo;
-    }
-
     private void updateSaldoPessoa(final Pessoa pessoa, final Map<Pessoa, Saldo> saldoMap, final BigDecimal saldo, final Cell subTotalCell, final BigDecimal bonus, final Cell totalCell) {
         Saldo saldoAcumulado = saldoMap.get(pessoa);
         if (saldoAcumulado == null) {
             saldoAcumulado = new Saldo();
-            saldoAcumulado.setSubTotalLancado(getBigDecimalFromCell(subTotalCell));
+            saldoAcumulado.setSubTotalLancado(Sheets.getBigDecimalValue(subTotalCell));
             saldoAcumulado.setBonusLancado(bonus);
-            saldoAcumulado.setTotalLancado(getBigDecimalFromCell(totalCell));
+            saldoAcumulado.setTotalLancado(Sheets.getBigDecimalValue(totalCell));
             saldoMap.put(pessoa, saldoAcumulado);
         }
         saldoAcumulado.addSaldoAcumulado(saldo);
 
     }
 
-    private Pessoa getPessoa(final String nome, final boolean forceCreatePlayer, final Partida partida) {
-        Pessoa pessoa = pessoaService.findByNome(nome);
+    private Pessoa getPessoa(final Integer codigo, final String nome, final boolean forceCreatePlayer, final Partida partida) {
+        Pessoa pessoa = null;
+        if (codigo != null && !Integer.valueOf(0).equals(codigo)) {
+            pessoa = pessoaService.findByCodigo(codigo);
+        } else if (!StringUtils.isEmpty(nome)){
+            pessoa = pessoaService.findByNome(nome);
+        }
+
         if (pessoa == null) {
             final String playerName = WordUtils.capitalizeFully(nome);
             if (forceCreatePlayer) {
                 pessoa = new Pessoa();
+                pessoa.setCodigo(atomicInteger.incrementAndGet());
                 pessoa.setNome(playerName);
                 pessoa = pessoaService.save(pessoa);
             } else {
                 playerValidatorSet.add(new PlayerValidator(playerName, partida));
             }
         }
+
         return pessoa;
     }
 

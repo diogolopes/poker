@@ -131,9 +131,9 @@ public class ClassificacaoImpl implements Classificacao {
     }
 
     public void setPosicao(final int posicao) {
+        this.movimentacao = (this.posicaoAnterior != 0) ? (this.posicaoAnterior - posicao) : 0;
         this.posicaoAnterior = this.posicaoAtual;
         this.posicaoAtual = posicao;
-        this.movimentacao = (this.posicaoAnterior != 0) ? (this.posicaoAnterior - this.posicaoAtual) : 0;
     }
 
     public int getPosicaoAtual() {

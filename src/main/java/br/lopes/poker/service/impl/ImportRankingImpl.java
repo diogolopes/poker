@@ -16,6 +16,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.poi.EncryptedDocumentException;
@@ -37,6 +38,7 @@ import br.lopes.poker.domain.Pessoa;
 import br.lopes.poker.domain.Ranking;
 import br.lopes.poker.helper.PokerPaths;
 import br.lopes.poker.helper.PokerPlanilha;
+import br.lopes.poker.helper.Sheets;
 import br.lopes.poker.service.ClassificacaoService.RankingType;
 import br.lopes.poker.service.ImportRanking;
 import br.lopes.poker.service.PessoaService;
@@ -52,9 +54,13 @@ public class ImportRankingImpl implements ImportRanking {
     @Autowired
     private RankingService rankingService;
 
+    private AtomicInteger atomicInteger;
+
     @Override
     @Transactional(readOnly = false)
     public List<Ranking> importRankings() {
+        atomicInteger = new AtomicInteger(pessoaService.getMaxCodigo());
+
         final Collection<File> searchFromRankingFile = searchFromRankingFile();
         final Collection<Ranking> rankingSet = new HashSet<>();
         for (final File file : searchFromRankingFile) {
@@ -139,17 +145,20 @@ public class ImportRankingImpl implements ImportRanking {
     private void getColocacao(final Ranking ranking, final Sheet sheet) {
         final Set<Colocacao> colocacoes = ranking.getColocacoes();
 
-        int colunaMovimentacao = -1, colunaNome = -1;
-        int colunaposicaoAtual = 0, colunaSaldo = -1, colunaJogos = -1, colunaVitorias = -1, colunaDerrotas = -1, colunaEmpates = -1, colunaAproveitamento = -1;
+        int colunaMovimentacao = -1, colunaNome = -1, colunaCodigo = -1;
+        int colunaPosicaoAtual = 0, colunaSaldo = -1, colunaJogos = -1, colunaVitorias = -1, colunaDerrotas = -1, colunaEmpates = -1, colunaAproveitamento = -1;
 
         boolean header = true;
         for (final Row row : sheet) {
             if (header) {
                 for (final Cell cell : row) {
-                    /*if (colunaMovimentacao != -1 && colunaNome != -1) {
-                        break;
-                    }*/
-                    if (cell.getStringCellValue().trim().equalsIgnoreCase(PokerPlanilha.COLUNA_NOME)) {
+                    /*
+                     * if (colunaMovimentacao != -1 && colunaNome != -1) {
+                     * break; }
+                     */
+                    if (cell.getStringCellValue().trim().equalsIgnoreCase(PokerPlanilha.COLUNA_CODIGO)) {
+                        colunaCodigo = cell.getColumnIndex();
+                    } else if (cell.getStringCellValue().trim().equalsIgnoreCase(PokerPlanilha.COLUNA_NOME)) {
                         colunaNome = cell.getColumnIndex();
                     } else if (cell.getStringCellValue().trim().equalsIgnoreCase(PokerPlanilha.COLUNA_MOVIMENTACAO)) {
                         colunaMovimentacao = cell.getColumnIndex();
@@ -168,21 +177,23 @@ public class ImportRankingImpl implements ImportRanking {
                     }
                 }
 
-                LOGGER.info("colunaposicaoAtual[" + colunaposicaoAtual + "], colunaMovimentacao[" + colunaMovimentacao + "], colunaNome[" + colunaNome + "], colunaSaldo[" + colunaSaldo
-                        + "], colunaJogos[" + colunaJogos + "], colunaAproveitamento[" + colunaAproveitamento + "], colunaVitorias[" + colunaVitorias + "], colunaDerrotas[" + colunaDerrotas
-                        + "], colunaEmpates[" + colunaEmpates + "]");
+                LOGGER.info("colunaPosicaoAtual[" + colunaPosicaoAtual + "], colunaMovimentacao[" + colunaMovimentacao + "], colunaCodigo[" + colunaCodigo + "], colunaNome[" + colunaNome
+                        + "], colunaSaldo[" + colunaSaldo + "], colunaJogos[" + colunaJogos + "], colunaAproveitamento[" + colunaAproveitamento + "], colunaVitorias[" + colunaVitorias
+                        + "], colunaDerrotas[" + colunaDerrotas + "], colunaEmpates[" + colunaEmpates + "]");
                 header = false;
                 continue;
             }
+
+            final Integer codigo = colunaCodigo > -1 ? Sheets.getIntegerValue(row.getCell(colunaCodigo)) : null;
             final String nome = row.getCell(colunaNome).getStringCellValue();
             if (StringUtils.isEmpty(nome)) {
                 break;
             }
 
             final Colocacao colocacao = new Colocacao();
-            final Double posicaoAtual = row.getCell(colunaposicaoAtual).getNumericCellValue();
+            final Double posicaoAtual = row.getCell(colunaPosicaoAtual).getNumericCellValue();
             final String movimentacao = (colunaMovimentacao > 0) ? row.getCell(colunaMovimentacao).getStringCellValue() : null;
-            final Pessoa pessoa = getPessoa(nome);
+            final Pessoa pessoa = getPessoa(codigo, nome);
             final BigDecimal saldo = BigDecimal.valueOf(row.getCell(colunaSaldo).getNumericCellValue());
             final Double jogos = row.getCell(colunaJogos).getNumericCellValue();
             final Double vitorias = row.getCell(colunaVitorias).getNumericCellValue();
@@ -211,10 +222,14 @@ public class ImportRankingImpl implements ImportRanking {
         return 0;
     }
 
-    private Pessoa getPessoa(final String nome) {
-        Pessoa pessoa = pessoaService.findByNome(nome);
+    private Pessoa getPessoa(final Integer codigo, final String nome) {
+        Pessoa pessoa = null;
+        if (codigo != null && !Integer.valueOf(0).equals(codigo)) {
+            pessoa = pessoaService.findByCodigo(codigo);
+        }
         if (pessoa == null) {
             pessoa = new Pessoa();
+            pessoa.setCodigo(atomicInteger.incrementAndGet());
             pessoa.setNome(nome);
             pessoa = pessoaService.save(pessoa);
         }
