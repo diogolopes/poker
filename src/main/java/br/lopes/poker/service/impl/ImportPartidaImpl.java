@@ -21,9 +21,9 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.transaction.Transactional;
 
@@ -55,8 +55,6 @@ import br.lopes.poker.service.PessoaService;
 
 @Service
 public class ImportPartidaImpl implements ImportPartida {
-    private static final String FORCE_IMPORT = "force-import";
-
     private static final Logger LOGGER = org.slf4j.LoggerFactory.getLogger(ImportPartidaImpl.class);
 
     @Autowired
@@ -65,10 +63,10 @@ public class ImportPartidaImpl implements ImportPartida {
     @Autowired
     private PartidaService partidaService;
 
-    private Set<PlayerValidator> playerValidatorSet = new HashSet<>();
+    private Set<PlayerCreated> playerCreatedSet = new HashSet<>();
 
     private AtomicInteger atomicInteger;
-    
+
     @Override
     @Transactional
     public List<Partida> importPartidas() {
@@ -135,15 +133,14 @@ public class ImportPartidaImpl implements ImportPartida {
             LOGGER.info("Iniciando o processamento da partida " + file);
             final Workbook wb = WorkbookFactory.create(file);
             final Sheet sheet = wb.getSheetAt(0);
-            final boolean forceCreatePlayer = file.getName().contains(FORCE_IMPORT);
-            final Set<Partida> partidas = getPartidas(year, sheet, forceCreatePlayer);
+            final Set<Partida> partidas = getPartidas(year, sheet);
 
             final Optional<Partida> firstPartida = partidas.stream().min((p1, p2) -> p1.getData().compareTo(p2.getData()));
             wb.close();
 
-            if (partidas.isEmpty() && !forceCreatePlayer && !playerValidatorSet.isEmpty()) {
+            if (partidas.isEmpty() && !playerCreatedSet.isEmpty()) {
                 final String filePath = FilenameUtils.getFullPath(file.getAbsolutePath());
-                final String fileName = PokerPaths.POKER_PARTIDA_FILE + " " + FORCE_IMPORT + "." + FilenameUtils.getExtension(file.getName());
+                final String fileName = PokerPaths.POKER_PARTIDA_FILE + "." + FilenameUtils.getExtension(file.getName());
                 final Path targetPath = new File(filePath + "/" + fileName).toPath();
                 Files.move(file.toPath(), targetPath, StandardCopyOption.REPLACE_EXISTING);
                 return java.util.Collections.emptySet();
@@ -157,7 +154,7 @@ public class ImportPartidaImpl implements ImportPartida {
         return java.util.Collections.emptySet();
     }
 
-    private Set<Partida> getPartidas(final String year, final Sheet sheet, final boolean forceCreatePlayer) {
+    private Set<Partida> getPartidas(final String year, final Sheet sheet) {
         final Set<Partida> partidas = new HashSet<Partida>();
         final Map<Integer, Partida> partidaMap = new HashMap<>();
         final Map<Pessoa, Saldo> saldoMap = new HashMap<>();
@@ -187,14 +184,11 @@ public class ImportPartidaImpl implements ImportPartida {
                             continue;
                         }
 
-                        
-
                         if (valorCelulaDataPartida.equalsIgnoreCase("CÓDIGO")) {
                             codigoIndex = cell.getColumnIndex();
                             continue;
                         }
 
-                        
                         if (valorCelulaDataPartida.equalsIgnoreCase("Participante")) {
                             participanteIndex = cell.getColumnIndex();
                             continue;
@@ -241,7 +235,7 @@ public class ImportPartidaImpl implements ImportPartida {
 
                 final Integer codigo = Sheets.getIntegerValue(row.getCell(codigoIndex));
                 final String nome = row.getCell(participanteIndex).getStringCellValue();
-                final Pessoa pessoa = getPessoa(codigo, nome.trim(), forceCreatePlayer, partida);
+                final Pessoa pessoa = getPessoa(codigo, nome, partida);
 
                 final BigDecimal saldo = Sheets.getBigDecimalValue(row.getCell(column));
 
@@ -254,15 +248,14 @@ public class ImportPartidaImpl implements ImportPartida {
             }
 
         }
-        if (!forceCreatePlayer && !playerValidatorSet.isEmpty()) {
-            for (final PlayerValidator playerValidator : playerValidatorSet) {
-                Validator.validar("Não encontrou o nome " + playerValidator.getNome() + " no ranking atual que veio da partida do dia " + playerValidator.getPartida().getData(),
+        if (!playerCreatedSet.isEmpty()) {
+            for (final PlayerCreated playerValidator : playerCreatedSet) {
+                Validator.validar("Jogador novo encontrado: " + playerValidator.getNome() + " no ranking atual que veio da partida do dia " + playerValidator.getPartida().getData(),
                         String.valueOf(Dates.dateToLocalDate(playerValidator.getPartida().getData()).getYear()));
             }
-            return Collections.emptySet();
-        } else {
-            Validator.validarSaldo(year, saldoMap);
         }
+
+        Validator.validarSaldo(year, saldoMap);
         return partidas;
     }
 
@@ -296,24 +289,22 @@ public class ImportPartidaImpl implements ImportPartida {
 
     }
 
-    private Pessoa getPessoa(final Integer codigo, final String nome, final boolean forceCreatePlayer, final Partida partida) {
+    private Pessoa getPessoa(final Integer codigo, final String nome, final Partida partida) {
         Pessoa pessoa = null;
+        final String nameToFind = nome.trim();
         if (codigo != null && !Integer.valueOf(0).equals(codigo)) {
             pessoa = pessoaService.findByCodigo(codigo);
-        } else if (!StringUtils.isEmpty(nome)){
-            pessoa = pessoaService.findByNome(nome);
+        } else if (!StringUtils.isEmpty(nameToFind)) {
+            pessoa = pessoaService.findByNome(nameToFind);
         }
 
         if (pessoa == null) {
-            final String playerName = WordUtils.capitalizeFully(nome);
-            if (forceCreatePlayer) {
-                pessoa = new Pessoa();
-                pessoa.setCodigo(atomicInteger.incrementAndGet());
-                pessoa.setNome(playerName);
-                pessoa = pessoaService.save(pessoa);
-            } else {
-                playerValidatorSet.add(new PlayerValidator(playerName, partida));
-            }
+            final String playerName = WordUtils.capitalizeFully(nameToFind);
+            pessoa = new Pessoa();
+            pessoa.setCodigo(atomicInteger.incrementAndGet());
+            pessoa.setNome(playerName);
+            pessoa = pessoaService.save(pessoa);
+            playerCreatedSet.add(new PlayerCreated(playerName, partida));
         }
 
         return pessoa;
@@ -344,11 +335,11 @@ public class ImportPartidaImpl implements ImportPartida {
 
     }
 
-    private class PlayerValidator {
+    private class PlayerCreated {
         private final String nome;
         private final Partida partida;
 
-        public PlayerValidator(final String nome, final Partida partida) {
+        public PlayerCreated(final String nome, final Partida partida) {
             this.nome = nome;
             this.partida = partida;
         }
