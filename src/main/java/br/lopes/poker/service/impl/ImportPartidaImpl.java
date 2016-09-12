@@ -184,7 +184,7 @@ public class ImportPartidaImpl implements ImportPartida {
                             continue;
                         }
 
-                        if (valorCelulaDataPartida.equalsIgnoreCase("CÓDIGO")) {
+                        if (valorCelulaDataPartida.equalsIgnoreCase("CÓDIGO") || valorCelulaDataPartida.equalsIgnoreCase("CODIGO")) {
                             codigoIndex = cell.getColumnIndex();
                             continue;
                         }
