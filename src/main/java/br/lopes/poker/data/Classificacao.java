@@ -5,6 +5,11 @@ import java.math.BigDecimal;
 import br.lopes.poker.domain.PartidaPessoa;
 import br.lopes.poker.domain.Pessoa;
 
+/**
+ * 
+ * @author consultor311
+ *
+ */
 public interface Classificacao {
 
 	Pessoa getPessoa();
