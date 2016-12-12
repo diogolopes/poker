@@ -17,7 +17,8 @@ public class Sheets {
             return Double.valueOf(numericCellValue).intValue();
         } else {
             final String stringCellValue = cell.getStringCellValue().trim();
-            if (StringUtils.isEmpty(stringCellValue) || !org.apache.commons.lang3.math.NumberUtils.isNumber(stringCellValue)) {
+            if (StringUtils.isEmpty(stringCellValue)
+                    || !org.apache.commons.lang3.math.NumberUtils.isNumber(stringCellValue)) {
                 return null;
             } else {
                 return Integer.valueOf(stringCellValue);
@@ -36,6 +37,7 @@ public class Sheets {
             saldoString = saldoString.trim();
             saldoString = saldoString.replace(",", ".");
             saldoString = saldoString.replace("+", "");
+            saldoString = saldoString.replace("O", "0");
 
             if (saldoString.equals("-") || saldoString.equals("")) {
                 return null;
