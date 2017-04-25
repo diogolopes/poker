@@ -45,6 +45,7 @@ import org.springframework.util.StringUtils;
 import br.lopes.poker.data.Saldo;
 import br.lopes.poker.domain.Partida;
 import br.lopes.poker.domain.Pessoa;
+import br.lopes.poker.exception.PokerException;
 import br.lopes.poker.helper.Dates;
 import br.lopes.poker.helper.PokerPaths;
 import br.lopes.poker.helper.Sheets;
@@ -69,7 +70,7 @@ public class ImportPartidaImpl implements ImportPartida {
 
 	@Override
 	@Transactional
-	public List<Partida> importPartidas() {
+	public List<Partida> importPartidas() throws PokerException {
 		atomicInteger = new AtomicInteger(pessoaService.getMaxCodigo());
 		final Collection<File> partidaFiles = searchFromPartidaDirectory();
 		final Set<Partida> partidasSet = new HashSet<>();
@@ -84,7 +85,7 @@ public class ImportPartidaImpl implements ImportPartida {
 		return (partidasSet.isEmpty()) ? Collections.emptyList() : partidaService.save(partidasSet);
 	}
 
-	private Collection<File> searchFromPartidaDirectory() {
+	private Collection<File> searchFromPartidaDirectory() throws PokerException {
 		final Collection<File> files = new ArrayList<>();
 		try {
 
@@ -96,13 +97,14 @@ public class ImportPartidaImpl implements ImportPartida {
 				}
 			});
 
-		} catch (final IOException e) {
-			LOGGER.error("ErroIOException", e);
+		} catch (final IOException exception) {
+			LOGGER.error("ErroIOException", exception);
+			throw new PokerException("Error in createPartidasFromFile", exception);
 		}
 		return files;
 	}
 
-	private Set<Partida> createPartidasFromDirectory(final File file) {
+	private Set<Partida> createPartidasFromDirectory(final File file) throws PokerException {
 		final File[] listFiles = file.listFiles(new FilenameFilter() {
 
 			@Override
@@ -114,7 +116,7 @@ public class ImportPartidaImpl implements ImportPartida {
 		return createPartidasFromFiles(file.getName(), listFiles);
 	}
 
-	private Set<Partida> createPartidasFromFiles(final String year, final File[] listFiles) {
+	private Set<Partida> createPartidasFromFiles(final String year, final File[] listFiles) throws PokerException {
 		Validator.deletarArquivo(year);
 		if (listFiles.length > 0) {
 			final Set<Partida> partidas = new HashSet<>();
@@ -128,7 +130,7 @@ public class ImportPartidaImpl implements ImportPartida {
 		return null;
 	}
 
-	private Set<Partida> createPartidasFromFile(final String year, final File file) {
+	private Set<Partida> createPartidasFromFile(final String year, final File file) throws PokerException {
 		try {
 			LOGGER.info("Iniciando o processamento da partida " + file);
 			final Workbook wb = WorkbookFactory.create(file);
@@ -150,13 +152,13 @@ public class ImportPartidaImpl implements ImportPartida {
 
 			createBackupFile(year, file, firstPartida);
 			return partidas;
-		} catch (final EncryptedDocumentException | InvalidFormatException | IOException e) {
-			e.printStackTrace();
+		} catch (final EncryptedDocumentException | InvalidFormatException | IOException exception) {
+			LOGGER.error("createPartidasFromFile", exception);
+			throw new PokerException("Error in createPartidasFromFile", exception);
 		}
-		return java.util.Collections.emptySet();
 	}
 
-	private Set<Partida> getPartidas(final String year, final Sheet sheet) {
+	private Set<Partida> getPartidas(final String year, final Sheet sheet) throws PokerException {
 		final Set<Partida> partidas = new HashSet<Partida>();
 		final Map<Integer, Partida> partidaMap = new HashMap<>();
 		final Map<Pessoa, Saldo> saldoMap = new HashMap<>();
@@ -169,22 +171,20 @@ public class ImportPartidaImpl implements ImportPartida {
 				for (final Cell cell : row) {
 
 					if (cell.getCellType() == Cell.CELL_TYPE_STRING) {
-						final String valorCelulaDataPartida = cell.getStringCellValue().trim();
-						if (valorCelulaDataPartida.equalsIgnoreCase("Sub-total")
-								|| valorCelulaDataPartida.equalsIgnoreCase("Sub total")) {
+						final String valorCelulaDataPartida = cell.getStringCellValue().trim().toUpperCase();
+						if (valorCelulaDataPartida.equalsIgnoreCase("SUB-TOTAL")
+								|| valorCelulaDataPartida.equalsIgnoreCase("SUB TOTAL")
+								|| valorCelulaDataPartida.equalsIgnoreCase("S-TOTAL")) {
 							subTotalIndex = cell.getColumnIndex();
 							continue;
 						}
 
-						if (valorCelulaDataPartida.equalsIgnoreCase("Bônus")
-								|| valorCelulaDataPartida.equalsIgnoreCase("Bonus")
-								|| valorCelulaDataPartida.contains("Bonus")
-								|| valorCelulaDataPartida.contains("Bônus")) {
+						if (valorCelulaDataPartida.contains("BONUS") || valorCelulaDataPartida.contains("BÔNUS")) {
 							bonusIndex = cell.getColumnIndex();
 							continue;
 						}
 
-						if (valorCelulaDataPartida.equalsIgnoreCase("Total")) {
+						if (valorCelulaDataPartida.equalsIgnoreCase("TOTAL")) {
 							totalIndex = cell.getColumnIndex();
 							continue;
 						}
@@ -195,7 +195,7 @@ public class ImportPartidaImpl implements ImportPartida {
 							continue;
 						}
 
-						if (valorCelulaDataPartida.equalsIgnoreCase("Participante")) {
+						if (valorCelulaDataPartida.equalsIgnoreCase("PARTICIPANTE")) {
 							participanteIndex = cell.getColumnIndex();
 							continue;
 						}
@@ -214,9 +214,10 @@ public class ImportPartidaImpl implements ImportPartida {
 							final Date dataPartida = Dates
 									.localDateToDateWithoutTime(partidaDate.withYear(Integer.valueOf(year)));
 							createPartida(partidas, partidaMap, cell, dataPartida);
-						} catch (final DateTimeParseException e) {
+						} catch (final DateTimeParseException exception) {
 							LOGGER.error("Não consegui converter o valor " + valorCelulaDataPartida
 									+ " no formato dd/MM/yy");
+							throw new PokerException("DateTimeParseException", exception);
 						}
 					}
 
@@ -326,7 +327,7 @@ public class ImportPartidaImpl implements ImportPartida {
 		return pessoa;
 	}
 
-	private void createBackupFile(final String year, final File file, final Optional<Partida> partida) {
+	private void createBackupFile(final String year, final File file, final Optional<Partida> partida) throws PokerException {
 		final String partidaDate = partida.isPresent()
 				? Dates.dateToLocalDate(partida.get().getData()).format(DateTimeFormatter.ofPattern(" MM-dd-yyyy"))
 				: LocalDateTime.now().format(DateTimeFormatter.ofPattern(" MM-dd-yyyy"));
@@ -349,8 +350,9 @@ public class ImportPartidaImpl implements ImportPartida {
 			}
 			LOGGER.info("Gerando o backup de " + file + " para " + targetPath);
 			Files.move(file.toPath(), targetPath, StandardCopyOption.REPLACE_EXISTING);
-		} catch (final IOException e) {
-			LOGGER.error("Error", e);
+		} catch (final IOException exception) {
+			LOGGER.error("Error", exception);
+			throw new PokerException("DateTimeParseException", exception);
 		}
 
 	}
