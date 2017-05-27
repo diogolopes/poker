@@ -22,6 +22,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<java.version>1.8</java.version>
 		<poi.version>3.14</poi.version>
+		<datasource.path>C:\dev\poker</datasource.path>
 	</properties>
 
 	<dependencies>
