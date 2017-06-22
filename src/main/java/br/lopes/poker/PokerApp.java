@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 
+import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -22,63 +23,66 @@ import br.lopes.poker.service.RankingService;
 
 @SpringBootApplication
 public class PokerApp implements CommandLineRunner {
-	@Autowired
-	private RankingService rankingService;
+    private static final Logger LOGGER = org.slf4j.LoggerFactory.getLogger(PokerApp.class);
 
-	@Autowired
-	private ImportRanking importRanking;
+    @Autowired
+    private RankingService rankingService;
 
-	@Autowired
-	private ImportPartida importPartida;
+    @Autowired
+    private ImportRanking importRanking;
 
-	@Autowired
-	private ClassificacaoService classificacaoService;
+    @Autowired
+    private ImportPartida importPartida;
 
-	public static void main(final String[] args) {
-		SpringApplication.run(PokerApp.class, args);
-	}
+    @Autowired
+    private ClassificacaoService classificacaoService;
 
-	@Override
-	public void run(final String... args) throws Exception {
-		try {
-			final List<Ranking> importRankings = importRanking.importRankings();
-			final List<Partida> partidas = importPartida.importPartidas();
-			final Optional<Ranking> optionalMaxRaking = importRankings.stream()
-					.max((r1, r2) -> r1.getDataAtualizacao().compareTo(r2.getDataAtualizacao()));
+    public static void main(final String[] args) {
+        SpringApplication.run(PokerApp.class, args);
+    }
 
-			if (!partidas.isEmpty()) {
-				final Optional<Partida> partidaMax = partidas.stream()
-						.max((r1, r2) -> r1.getData().compareTo(r2.getData()));
+    @Override
+    public void run(final String... args) throws Exception {
 
-				if (optionalMaxRaking.isPresent()) {
-					final Ranking ranking = optionalMaxRaking.get();
-					classificacaoService.generateRankingFileByPartidasAndType(ranking, new HashSet<>(partidas));
-				} else {
-					final int ano = Dates.dateToLocalDate(partidaMax.get().getData()).getYear();
-					Ranking lastRankingBySaldo = rankingService.findByAno(ano, RankingType.SALDO);
-					if (lastRankingBySaldo == null) {
-						lastRankingBySaldo = new Ranking();
+        try {
+            final List<Ranking> importRankings = importRanking.importRankings();
+            final List<Partida> partidas = importPartida.importPartidas();
+            final Optional<Ranking> optionalMaxRaking = importRankings.stream()
+                    .max((r1, r2) -> r1.getDataAtualizacao().compareTo(r2.getDataAtualizacao()));
 
-						final Ranking newYearRanking = new Ranking();
-						newYearRanking.setAno(ano);
-						newYearRanking.setDataAtualizacao(new Date());
-						newYearRanking.setRankingType(RankingType.SALDO);
+            if (!partidas.isEmpty()) {
+                final Optional<Partida> partidaMax = partidas.stream()
+                        .max((r1, r2) -> r1.getData().compareTo(r2.getData()));
 
-						classificacaoService.generateRankingFileByPartidasAndType(rankingService.save(newYearRanking),
-								new HashSet<>(partidas), RankingType.SALDO);
-					} else {
-						final Ranking rankingBySaldo = rankingService.clone(lastRankingBySaldo);
-						classificacaoService.generateRankingFileByPartidasAndType(rankingBySaldo, new HashSet<>(partidas),
-								RankingType.SALDO);
-					}
-				}
-			} else {
-				final Ranking rankingBySaldo = rankingService.findByAno(LocalDate.now().getYear(), RankingType.SALDO);
-				classificacaoService.generateRankingFileByType(rankingBySaldo);
-			}			
-		} catch (final Exception exception) {
-			
-		}
-		
-	}
+                if (optionalMaxRaking.isPresent()) {
+                    final Ranking ranking = optionalMaxRaking.get();
+                    classificacaoService.generateRankingFileByPartidasAndType(ranking, new HashSet<>(partidas));
+                } else {
+                    final int ano = Dates.dateToLocalDate(partidaMax.get().getData()).getYear();
+                    Ranking lastRankingBySaldo = rankingService.findByAno(ano, RankingType.SALDO);
+                    if (lastRankingBySaldo == null) {
+                        lastRankingBySaldo = new Ranking();
+
+                        final Ranking newYearRanking = new Ranking();
+                        newYearRanking.setAno(ano);
+                        newYearRanking.setDataAtualizacao(new Date());
+                        newYearRanking.setRankingType(RankingType.SALDO);
+
+                        classificacaoService.generateRankingFileByPartidasAndType(rankingService.save(newYearRanking),
+                                new HashSet<>(partidas), RankingType.SALDO);
+                    } else {
+                        final Ranking rankingBySaldo = rankingService.clone(lastRankingBySaldo);
+                        classificacaoService.generateRankingFileByPartidasAndType(rankingBySaldo,
+                                new HashSet<>(partidas), RankingType.SALDO);
+                    }
+                }
+            } else {
+                final Ranking rankingBySaldo = rankingService.findByAno(LocalDate.now().getYear(), RankingType.SALDO);
+                classificacaoService.generateRankingFileByType(rankingBySaldo);
+            }
+        } catch (final Exception exception) {
+            LOGGER.error("Error", exception);
+        }
+
+    }
 }

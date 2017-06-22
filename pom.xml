@@ -14,15 +14,14 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>1.3.5.RELEASE</version>
-		<relativePath />
+		<version>1.5.3.RELEASE</version>
 	</parent>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<java.version>1.8</java.version>
 		<poi.version>3.14</poi.version>
-		<datasource.path>C:\dev\poker</datasource.path>
+		<datasource-path>C:/dev/poker</datasource-path>
 	</properties>
 
 	<dependencies>
@@ -79,6 +78,12 @@
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
 		</plugins>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>        
 	</build>
 
 

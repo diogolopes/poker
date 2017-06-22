@@ -10,7 +10,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.SpringApplicationConfiguration;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.Rollback;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.transaction.BeforeTransaction;
@@ -24,7 +24,7 @@ import br.lopes.poker.faker.PessoaFaker.EPessoa;
 import br.lopes.poker.helper.DDLValidator;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringApplicationConfiguration(classes = H2TestConfig.class)
+@SpringBootTest(classes = H2TestConfig.class)
 @Rollback
 @Transactional(readOnly = false)
 public class PessoaRepositoryTest {

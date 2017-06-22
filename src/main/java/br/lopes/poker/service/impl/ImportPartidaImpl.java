@@ -56,323 +56,330 @@ import br.lopes.poker.service.PessoaService;
 
 @Service
 public class ImportPartidaImpl implements ImportPartida {
-	private static final Logger LOGGER = org.slf4j.LoggerFactory.getLogger(ImportPartidaImpl.class);
+    private static final Logger LOGGER = org.slf4j.LoggerFactory.getLogger(ImportPartidaImpl.class);
 
-	@Autowired
-	private PessoaService pessoaService;
+    @Autowired
+    private PessoaService pessoaService;
 
-	@Autowired
-	private PartidaService partidaService;
+    @Autowired
+    private PartidaService partidaService;
 
-	private Set<PlayerCreated> playerCreatedSet = new HashSet<>();
+    @Autowired
+    private PokerPaths pokerPaths;
 
-	private AtomicInteger atomicInteger;
+    @Autowired
+    private Validator validator;
 
-	@Override
-	@Transactional
-	public List<Partida> importPartidas() throws PokerException {
-		atomicInteger = new AtomicInteger(pessoaService.getMaxCodigo());
-		final Collection<File> partidaFiles = searchFromPartidaDirectory();
-		final Set<Partida> partidasSet = new HashSet<>();
-		for (final File file : partidaFiles) {
-			final Set<Partida> partidasFromDirectory = createPartidasFromDirectory(file);
-			if (partidasFromDirectory == null || partidasFromDirectory.isEmpty()) {
-				LOGGER.info("Não foi encontrada nenhuma partida para importar");
-			} else {
-				partidasSet.addAll(partidasFromDirectory);
-			}
-		}
-		return (partidasSet.isEmpty()) ? Collections.emptyList() : partidaService.save(partidasSet);
-	}
+    private Set<PlayerCreated> playerCreatedSet = new HashSet<>();
 
-	private Collection<File> searchFromPartidaDirectory() throws PokerException {
-		final Collection<File> files = new ArrayList<>();
-		try {
+    private AtomicInteger atomicInteger;
 
-			final File directory = new File(PokerPaths.POKER_PARTIDA_FOLDER);
-			Files.list(directory.toPath()).forEach(filePath -> {
-				if (Files.isDirectory(filePath)) {
-					files.add(filePath.toFile());
-					LOGGER.info("Encontrou o path da partida " + filePath);
-				}
-			});
+    @Override
+    @Transactional
+    public List<Partida> importPartidas() throws PokerException {
+        atomicInteger = new AtomicInteger(pessoaService.getMaxCodigo());
+        final Collection<File> partidaFiles = searchFromPartidaDirectory();
+        final Set<Partida> partidasSet = new HashSet<>();
+        for (final File file : partidaFiles) {
+            final Set<Partida> partidasFromDirectory = createPartidasFromDirectory(file);
+            if (partidasFromDirectory == null || partidasFromDirectory.isEmpty()) {
+                LOGGER.info("Não foi encontrada nenhuma partida para importar");
+            } else {
+                partidasSet.addAll(partidasFromDirectory);
+            }
+        }
+        return (partidasSet.isEmpty()) ? Collections.emptyList() : partidaService.save(partidasSet);
+    }
 
-		} catch (final IOException exception) {
-			LOGGER.error("ErroIOException", exception);
-			throw new PokerException("Error in createPartidasFromFile", exception);
-		}
-		return files;
-	}
+    private Collection<File> searchFromPartidaDirectory() throws PokerException {
+        final Collection<File> files = new ArrayList<>();
+        try {
 
-	private Set<Partida> createPartidasFromDirectory(final File file) throws PokerException {
-		final File[] listFiles = file.listFiles(new FilenameFilter() {
+            final File directory = new File(pokerPaths.getPartidaFolder());
+            Files.list(directory.toPath()).forEach(filePath -> {
+                if (Files.isDirectory(filePath)) {
+                    files.add(filePath.toFile());
+                    LOGGER.info("Encontrou o path da partida {}", filePath);
+                }
+            });
 
-			@Override
-			public boolean accept(final File dir, final String name) {
-				return name.endsWith("xlsx") || name.endsWith("xls");
-			}
-		});
+        } catch (final IOException exception) {
+            LOGGER.error("ErroIOException", exception);
+            throw new PokerException("Error in createPartidasFromFile", exception);
+        }
+        return files;
+    }
 
-		return createPartidasFromFiles(file.getName(), listFiles);
-	}
+    private Set<Partida> createPartidasFromDirectory(final File file) throws PokerException {
+        final File[] listFiles = file.listFiles(new FilenameFilter() {
 
-	private Set<Partida> createPartidasFromFiles(final String year, final File[] listFiles) throws PokerException {
-		Validator.deletarArquivo(year);
-		if (listFiles.length > 0) {
-			final Set<Partida> partidas = new HashSet<>();
-			for (int i = 0; i < listFiles.length; i++) {
-				final Set<Partida> importPartidas = createPartidasFromFile(year, listFiles[i]);
-				partidas.addAll(importPartidas);
-			}
-			return partidas;
-		}
-		LOGGER.info("Diretório " + year + " não tem nenhum arquivo com extensão: xlsx ou xls");
-		return null;
-	}
+            @Override
+            public boolean accept(final File dir, final String name) {
+                return name.endsWith("xlsx") || name.endsWith("xls");
+            }
+        });
 
-	private Set<Partida> createPartidasFromFile(final String year, final File file) throws PokerException {
-		try {
-			LOGGER.info("Iniciando o processamento da partida " + file);
-			final Workbook wb = WorkbookFactory.create(file);
-			final Sheet sheet = wb.getSheetAt(0);
-			final Set<Partida> partidas = getPartidas(year, sheet);
+        return createPartidasFromFiles(file.getName(), listFiles);
+    }
 
-			final Optional<Partida> firstPartida = partidas.stream()
-					.min((p1, p2) -> p1.getData().compareTo(p2.getData()));
-			wb.close();
+    private Set<Partida> createPartidasFromFiles(final String year, final File[] listFiles) throws PokerException {
+        validator.deletarArquivo(year);
+        if (listFiles.length > 0) {
+            final Set<Partida> partidas = new HashSet<>();
+            for (int i = 0; i < listFiles.length; i++) {
+                final Set<Partida> importPartidas = createPartidasFromFile(year, listFiles[i]);
+                partidas.addAll(importPartidas);
+            }
+            return partidas;
+        }
+        LOGGER.info("Diretório " + year + " não tem nenhum arquivo com extensão: xlsx ou xls");
+        return null;
+    }
 
-			if (partidas.isEmpty() && !playerCreatedSet.isEmpty()) {
-				final String filePath = FilenameUtils.getFullPath(file.getAbsolutePath());
-				final String fileName = PokerPaths.POKER_PARTIDA_FILE + "."
-						+ FilenameUtils.getExtension(file.getName());
-				final Path targetPath = new File(filePath + "/" + fileName).toPath();
-				Files.move(file.toPath(), targetPath, StandardCopyOption.REPLACE_EXISTING);
-				return java.util.Collections.emptySet();
-			}
+    private Set<Partida> createPartidasFromFile(final String year, final File file) throws PokerException {
+        try {
+            LOGGER.info("Iniciando o processamento da partida " + file);
+            final Workbook wb = WorkbookFactory.create(file);
+            final Sheet sheet = wb.getSheetAt(0);
+            final Set<Partida> partidas = getPartidas(year, sheet);
 
-			createBackupFile(year, file, firstPartida);
-			return partidas;
-		} catch (final EncryptedDocumentException | InvalidFormatException | IOException exception) {
-			LOGGER.error("createPartidasFromFile", exception);
-			throw new PokerException("Error in createPartidasFromFile", exception);
-		}
-	}
+            final Optional<Partida> firstPartida = partidas.stream()
+                    .min((p1, p2) -> p1.getData().compareTo(p2.getData()));
+            wb.close();
 
-	private Set<Partida> getPartidas(final String year, final Sheet sheet) throws PokerException {
-		final Set<Partida> partidas = new HashSet<Partida>();
-		final Map<Integer, Partida> partidaMap = new HashMap<>();
-		final Map<Pessoa, Saldo> saldoMap = new HashMap<>();
+            if (partidas.isEmpty() && !playerCreatedSet.isEmpty()) {
+                final String filePath = FilenameUtils.getFullPath(file.getAbsolutePath());
+                final String fileName = PokerPaths.POKER_PARTIDA_FILE + "."
+                        + FilenameUtils.getExtension(file.getName());
+                final Path targetPath = new File(filePath + "/" + fileName).toPath();
+                Files.move(file.toPath(), targetPath, StandardCopyOption.REPLACE_EXISTING);
+                return java.util.Collections.emptySet();
+            }
 
-		int subTotalIndex = -1, bonusIndex = -1, totalIndex = -1, codigoIndex = -1, participanteIndex = -1;
+            createBackupFile(year, file, firstPartida);
+            return partidas;
+        } catch (final EncryptedDocumentException | InvalidFormatException | IOException exception) {
+            LOGGER.error("createPartidasFromFile", exception);
+            throw new PokerException("Error in createPartidasFromFile", exception);
+        }
+    }
 
-		boolean header = true;
-		for (final Row row : sheet) {
-			if (header) {
-				for (final Cell cell : row) {
+    private Set<Partida> getPartidas(final String year, final Sheet sheet) throws PokerException {
+        final Set<Partida> partidas = new HashSet<Partida>();
+        final Map<Integer, Partida> partidaMap = new HashMap<>();
+        final Map<Pessoa, Saldo> saldoMap = new HashMap<>();
 
-					if (cell.getCellType() == Cell.CELL_TYPE_STRING) {
-						final String valorCelulaDataPartida = cell.getStringCellValue().trim().toUpperCase();
-						if (valorCelulaDataPartida.equalsIgnoreCase("SUB-TOTAL")
-								|| valorCelulaDataPartida.equalsIgnoreCase("SUB TOTAL")
-								|| valorCelulaDataPartida.equalsIgnoreCase("S-TOTAL")) {
-							subTotalIndex = cell.getColumnIndex();
-							continue;
-						}
+        int subTotalIndex = -1, bonusIndex = -1, totalIndex = -1, codigoIndex = -1, participanteIndex = -1;
 
-						if (valorCelulaDataPartida.contains("BONUS") || valorCelulaDataPartida.contains("BÔNUS")) {
-							bonusIndex = cell.getColumnIndex();
-							continue;
-						}
+        boolean header = true;
+        for (final Row row : sheet) {
+            if (header) {
+                for (final Cell cell : row) {
 
-						if (valorCelulaDataPartida.equalsIgnoreCase("TOTAL")) {
-							totalIndex = cell.getColumnIndex();
-							continue;
-						}
+                    if (cell.getCellType() == Cell.CELL_TYPE_STRING) {
+                        final String valorCelulaDataPartida = cell.getStringCellValue().trim().toUpperCase();
+                        if (valorCelulaDataPartida.equalsIgnoreCase("SUB-TOTAL")
+                                || valorCelulaDataPartida.equalsIgnoreCase("SUB TOTAL")
+                                || valorCelulaDataPartida.equalsIgnoreCase("S-TOTAL")) {
+                            subTotalIndex = cell.getColumnIndex();
+                            continue;
+                        }
 
-						if (valorCelulaDataPartida.equalsIgnoreCase("CÓDIGO")
-								|| valorCelulaDataPartida.equalsIgnoreCase("CODIGO")) {
-							codigoIndex = cell.getColumnIndex();
-							continue;
-						}
+                        if (valorCelulaDataPartida.contains("BONUS") || valorCelulaDataPartida.contains("BÔNUS")) {
+                            bonusIndex = cell.getColumnIndex();
+                            continue;
+                        }
 
-						if (valorCelulaDataPartida.equalsIgnoreCase("PARTICIPANTE")) {
-							participanteIndex = cell.getColumnIndex();
-							continue;
-						}
+                        if (valorCelulaDataPartida.equalsIgnoreCase("TOTAL")) {
+                            totalIndex = cell.getColumnIndex();
+                            continue;
+                        }
 
-						try {
-							final int tamanhoCampoData = valorCelulaDataPartida.trim().length();
-							final LocalDate partidaDate;
-							if (tamanhoCampoData == 8) {
-								partidaDate = LocalDate.parse(valorCelulaDataPartida,
-										DateTimeFormatter.ofPattern("dd/MM/yy"));
-							} else {
-								partidaDate = LocalDate.parse(valorCelulaDataPartida,
-										DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-							}
+                        if (valorCelulaDataPartida.equalsIgnoreCase("CÓDIGO")
+                                || valorCelulaDataPartida.equalsIgnoreCase("CODIGO")) {
+                            codigoIndex = cell.getColumnIndex();
+                            continue;
+                        }
 
-							final Date dataPartida = Dates
-									.localDateToDateWithoutTime(partidaDate.withYear(Integer.valueOf(year)));
-							createPartida(partidas, partidaMap, cell, dataPartida);
-						} catch (final DateTimeParseException exception) {
-							LOGGER.error("Não consegui converter o valor " + valorCelulaDataPartida
-									+ " no formato dd/MM/yy");
-							throw new PokerException("DateTimeParseException", exception);
-						}
-					}
+                        if (valorCelulaDataPartida.equalsIgnoreCase("PARTICIPANTE")) {
+                            participanteIndex = cell.getColumnIndex();
+                            continue;
+                        }
 
-					if (cell.getCellType() == Cell.CELL_TYPE_NUMERIC) {
-						if (DateUtil.isCellDateFormatted(cell)) {
-							final Date dataPartida = cell.getDateCellValue();
-							final Date localDateToDateWithoutTime = Dates
-									.localDateToDateWithoutTime(Dates.dateToLocalDate(dataPartida));
-							createPartida(partidas, partidaMap, cell, localDateToDateWithoutTime);
-						}
-					}
+                        try {
+                            final int tamanhoCampoData = valorCelulaDataPartida.trim().length();
+                            final LocalDate partidaDate;
+                            if (tamanhoCampoData == 8) {
+                                partidaDate = LocalDate.parse(valorCelulaDataPartida,
+                                        DateTimeFormatter.ofPattern("dd/MM/yy"));
+                            } else {
+                                partidaDate = LocalDate.parse(valorCelulaDataPartida,
+                                        DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+                            }
 
-				}
-				header = false;
-				continue;
-			}
+                            final Date dataPartida = Dates
+                                    .localDateToDateWithoutTime(partidaDate.withYear(Integer.valueOf(year)));
+                            createPartida(partidas, partidaMap, cell, dataPartida);
+                        } catch (final DateTimeParseException exception) {
+                            LOGGER.error("Não consegui converter o valor " + valorCelulaDataPartida
+                                    + " no formato dd/MM/yy");
+                            throw new PokerException("DateTimeParseException", exception);
+                        }
+                    }
 
-			final Iterator<Entry<Integer, Partida>> iterator = partidaMap.entrySet().iterator();
-			while (iterator.hasNext()) {
-				final Entry<Integer, Partida> entry = iterator.next();
-				final Integer column = entry.getKey();
-				final Partida partida = entry.getValue();
+                    if (cell.getCellType() == Cell.CELL_TYPE_NUMERIC) {
+                        if (DateUtil.isCellDateFormatted(cell)) {
+                            final Date dataPartida = cell.getDateCellValue();
+                            final Date localDateToDateWithoutTime = Dates
+                                    .localDateToDateWithoutTime(Dates.dateToLocalDate(dataPartida));
+                            createPartida(partidas, partidaMap, cell, localDateToDateWithoutTime);
+                        }
+                    }
 
-				if (row.getCell(participanteIndex) == null
-						|| StringUtils.isEmpty(row.getCell(participanteIndex).getStringCellValue())) {
-					break;
-				}
+                }
+                header = false;
+                continue;
+            }
 
-				final Integer codigo = Sheets.getIntegerValue(row.getCell(codigoIndex));
-				final String nome = row.getCell(participanteIndex).getStringCellValue();
-				final Pessoa pessoa = getPessoa(codigo, nome, partida);
+            final Iterator<Entry<Integer, Partida>> iterator = partidaMap.entrySet().iterator();
+            while (iterator.hasNext()) {
+                final Entry<Integer, Partida> entry = iterator.next();
+                final Integer column = entry.getKey();
+                final Partida partida = entry.getValue();
 
-				final BigDecimal saldo = Sheets.getBigDecimalValue(row.getCell(column));
+                if (row.getCell(participanteIndex) == null
+                        || StringUtils.isEmpty(row.getCell(participanteIndex).getStringCellValue())) {
+                    break;
+                }
 
-				if (saldo != null) {
-					final BigDecimal bonus = Sheets.getBigDecimalValue(row.getCell(bonusIndex));
-					updateSaldoPessoa(pessoa, saldoMap, saldo, row.getCell(subTotalIndex), bonus,
-							row.getCell(totalIndex));
-					partida.addPessoa(pessoa, saldo, BigDecimal.ONE);
-				}
+                final Integer codigo = Sheets.getIntegerValue(row.getCell(codigoIndex));
+                final String nome = row.getCell(participanteIndex).getStringCellValue();
+                final Pessoa pessoa = getPessoa(codigo, nome, partida);
 
-			}
+                final BigDecimal saldo = Sheets.getBigDecimalValue(row.getCell(column));
 
-		}
-		if (!playerCreatedSet.isEmpty()) {
-			for (final PlayerCreated playerValidator : playerCreatedSet) {
-				Validator.validar("Jogador novo encontrado: " + playerValidator.getNome()
-						+ " no ranking atual que veio da partida do dia " + playerValidator.getPartida().getData(),
-						String.valueOf(Dates.dateToLocalDate(playerValidator.getPartida().getData()).getYear()));
-			}
-		}
+                if (saldo != null) {
+                    final BigDecimal bonus = Sheets.getBigDecimalValue(row.getCell(bonusIndex));
+                    updateSaldoPessoa(pessoa, saldoMap, saldo, row.getCell(subTotalIndex), bonus,
+                            row.getCell(totalIndex));
+                    partida.addPessoa(pessoa, saldo, BigDecimal.ONE);
+                }
 
-		Validator.validarSaldo(year, saldoMap);
-		return partidas;
-	}
+            }
 
-	private void createPartida(final Set<Partida> partidas, final Map<Integer, Partida> partidaMap, final Cell cell,
-			final Date dataPartida) {
+        }
+        if (!playerCreatedSet.isEmpty()) {
+            for (final PlayerCreated playerValidator : playerCreatedSet) {
+                validator.validar("Jogador novo encontrado: " + playerValidator.getNome()
+                        + " no ranking atual que veio da partida do dia " + playerValidator.getPartida().getData(),
+                        String.valueOf(Dates.dateToLocalDate(playerValidator.getPartida().getData()).getYear()));
+            }
+        }
 
-		final Partida partidaExistente = partidaService.findByData(dataPartida);
-		if (partidaExistente != null) {
-			partidaService.delete(partidaExistente);
-			LOGGER.info("Partida de " + dataPartida + " ja existia. Deletando e recriando...");
-		} else {
-			LOGGER.info("Não existia a partida de " + dataPartida + " criada ainda. Criando....");
-		}
+        validator.validarSaldo(year, saldoMap);
+        return partidas;
+    }
 
-		final Partida partida = new Partida();
-		partida.setData(dataPartida);
+    private void createPartida(final Set<Partida> partidas, final Map<Integer, Partida> partidaMap, final Cell cell,
+            final Date dataPartida) {
 
-		partidaMap.put(cell.getColumnIndex(), partida);
-		partidas.add(partida);
-	}
+        final Partida partidaExistente = partidaService.findByData(dataPartida);
+        if (partidaExistente != null) {
+            partidaService.delete(partidaExistente);
+            LOGGER.info("Partida de " + dataPartida + " ja existia. Deletando e recriando...");
+        } else {
+            LOGGER.info("Não existia a partida de " + dataPartida + " criada ainda. Criando....");
+        }
 
-	private void updateSaldoPessoa(final Pessoa pessoa, final Map<Pessoa, Saldo> saldoMap, final BigDecimal saldo,
-			final Cell subTotalCell, final BigDecimal bonus, final Cell totalCell) {
-		Saldo saldoAcumulado = saldoMap.get(pessoa);
-		if (saldoAcumulado == null) {
-			saldoAcumulado = new Saldo();
-			saldoAcumulado.setSubTotalLancado(Sheets.getBigDecimalValue(subTotalCell));
-			saldoAcumulado.setBonusLancado(bonus);
-			saldoAcumulado.setTotalLancado(Sheets.getBigDecimalValue(totalCell));
-			saldoMap.put(pessoa, saldoAcumulado);
-		}
-		saldoAcumulado.addSaldoAcumulado(saldo);
+        final Partida partida = new Partida();
+        partida.setData(dataPartida);
 
-	}
+        partidaMap.put(cell.getColumnIndex(), partida);
+        partidas.add(partida);
+    }
 
-	private Pessoa getPessoa(final Integer codigo, final String nome, final Partida partida) {
-		Pessoa pessoa = null;
-		final String nameToFind = nome.trim();
-		if (codigo != null && !Integer.valueOf(0).equals(codigo)) {
-			pessoa = pessoaService.findByCodigo(codigo);
-		} else if (!StringUtils.isEmpty(nameToFind)) {
-			pessoa = pessoaService.findByNome(nameToFind);
-		}
+    private void updateSaldoPessoa(final Pessoa pessoa, final Map<Pessoa, Saldo> saldoMap, final BigDecimal saldo,
+            final Cell subTotalCell, final BigDecimal bonus, final Cell totalCell) {
+        Saldo saldoAcumulado = saldoMap.get(pessoa);
+        if (saldoAcumulado == null) {
+            saldoAcumulado = new Saldo();
+            saldoAcumulado.setSubTotalLancado(Sheets.getBigDecimalValue(subTotalCell));
+            saldoAcumulado.setBonusLancado(bonus);
+            saldoAcumulado.setTotalLancado(Sheets.getBigDecimalValue(totalCell));
+            saldoMap.put(pessoa, saldoAcumulado);
+        }
+        saldoAcumulado.addSaldoAcumulado(saldo);
 
-		if (pessoa == null) {
-			final String playerName = WordUtils.capitalizeFully(nameToFind);
-			pessoa = new Pessoa();
-			pessoa.setCodigo(atomicInteger.incrementAndGet());
-			pessoa.setNome(playerName);
-			pessoa = pessoaService.save(pessoa);
-			playerCreatedSet.add(new PlayerCreated(playerName, partida));
-		}
+    }
 
-		return pessoa;
-	}
+    private Pessoa getPessoa(final Integer codigo, final String nome, final Partida partida) {
+        Pessoa pessoa = null;
+        final String nameToFind = nome.trim();
+        if (codigo != null && !Integer.valueOf(0).equals(codigo)) {
+            pessoa = pessoaService.findByCodigo(codigo);
+        } else if (!StringUtils.isEmpty(nameToFind)) {
+            pessoa = pessoaService.findByNome(nameToFind);
+        }
 
-	private void createBackupFile(final String year, final File file, final Optional<Partida> partida) throws PokerException {
-		final String partidaDate = partida.isPresent()
-				? Dates.dateToLocalDate(partida.get().getData()).format(DateTimeFormatter.ofPattern(" MM-dd-yyyy"))
-				: LocalDateTime.now().format(DateTimeFormatter.ofPattern(" MM-dd-yyyy"));
-		final String fileName = PokerPaths.POKER_PARTIDA_FILE + partidaDate + "."
-				+ FilenameUtils.getExtension(file.getName());
+        if (pessoa == null) {
+            final String playerName = WordUtils.capitalizeFully(nameToFind);
+            pessoa = new Pessoa();
+            pessoa.setCodigo(atomicInteger.incrementAndGet());
+            pessoa.setNome(playerName);
+            pessoa = pessoaService.save(pessoa);
+            playerCreatedSet.add(new PlayerCreated(playerName, partida));
+        }
 
-		Path targetPath = new File(PokerPaths.POKER_PARTIDA_BACKUP_FOLDER + "/" + year + "/" + fileName).toPath();
-		try {
-			if (!Files.exists(targetPath)) {
-				Files.createDirectories(targetPath);
-			} else {
-				int i = 1;
-				while (Files.exists(targetPath)) {
-					targetPath = new File(
-							PokerPaths.POKER_PARTIDA_BACKUP_FOLDER + "/" + year + "/" + PokerPaths.POKER_PARTIDA_FILE
-									+ partidaDate + " (" + i + ")." + FilenameUtils.getExtension(file.getName()))
-											.toPath();
-					i++;
-				}
-			}
-			LOGGER.info("Gerando o backup de " + file + " para " + targetPath);
-			Files.move(file.toPath(), targetPath, StandardCopyOption.REPLACE_EXISTING);
-		} catch (final IOException exception) {
-			LOGGER.error("Error", exception);
-			throw new PokerException("DateTimeParseException", exception);
-		}
+        return pessoa;
+    }
 
-	}
+    private void createBackupFile(final String year, final File file, final Optional<Partida> partida)
+            throws PokerException {
+        final String partidaDate = partida.isPresent()
+                ? Dates.dateToLocalDate(partida.get().getData()).format(DateTimeFormatter.ofPattern(" MM-dd-yyyy"))
+                : LocalDateTime.now().format(DateTimeFormatter.ofPattern(" MM-dd-yyyy"));
+        final String fileName = PokerPaths.POKER_PARTIDA_FILE + partidaDate + "."
+                + FilenameUtils.getExtension(file.getName());
 
-	private class PlayerCreated {
-		private final String nome;
-		private final Partida partida;
+        final String pokerPartidaBackupFolder = pokerPaths.getPartidaBackupFolder();
 
-		public PlayerCreated(final String nome, final Partida partida) {
-			this.nome = nome;
-			this.partida = partida;
-		}
+        Path targetPath = new File(pokerPartidaBackupFolder + "/" + year + "/" + fileName).toPath();
+        try {
+            if (!Files.exists(targetPath)) {
+                Files.createDirectories(targetPath);
+            } else {
+                int i = 1;
+                while (Files.exists(targetPath)) {
+                    targetPath = new File(pokerPartidaBackupFolder + "/" + year + "/" + PokerPaths.POKER_PARTIDA_FILE
+                            + partidaDate + " (" + i + ")." + FilenameUtils.getExtension(file.getName())).toPath();
+                    i++;
+                }
+            }
+            LOGGER.info("Gerando o backup de " + file + " para " + targetPath);
+            Files.move(file.toPath(), targetPath, StandardCopyOption.REPLACE_EXISTING);
+        } catch (final IOException exception) {
+            LOGGER.error("Error", exception);
+            throw new PokerException("DateTimeParseException", exception);
+        }
 
-		public String getNome() {
-			return nome;
-		}
+    }
 
-		public Partida getPartida() {
-			return partida;
-		}
-	}
+    private class PlayerCreated {
+        private final String nome;
+        private final Partida partida;
+
+        public PlayerCreated(final String nome, final Partida partida) {
+            this.nome = nome;
+            this.partida = partida;
+        }
+
+        public String getNome() {
+            return nome;
+        }
+
+        public Partida getPartida() {
+            return partida;
+        }
+    }
 
 }

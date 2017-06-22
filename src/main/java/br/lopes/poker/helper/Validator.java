@@ -16,15 +16,23 @@ import java.util.Map.Entry;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import br.lopes.poker.data.Saldo;
 import br.lopes.poker.domain.Pessoa;
 
+@Component
 public class Validator {
     private static final Logger LOGGER = LoggerFactory.getLogger(Validator.class);
 
-    public static void deletarArquivo(final String year) {
-        final File file = new File(PokerPaths.POKER_RANKING_GERADO_FOLDER + "/" + year + "/validacoes.txt");
+    @Autowired
+    private PokerPaths pokerPaths;
+
+    public void deletarArquivo(final String year) {
+        final String rankingGeradoFolder = pokerPaths.getRankingGeradoFolder();
+
+        final File file = new File(rankingGeradoFolder + "/" + year + "/validacoes.txt");
         try {
             Files.deleteIfExists(file.toPath());
         } catch (IOException e) {
@@ -32,10 +40,11 @@ public class Validator {
         }
     }
 
-    public static void validarSaldo(final String year, final Map<Pessoa, Saldo> saldoMap) {
+    public void validarSaldo(final String year, final Map<Pessoa, Saldo> saldoMap) {
         try {
             final List<String> errorLines = new ArrayList<>();
-            final File file = new File(PokerPaths.POKER_RANKING_GERADO_FOLDER + "/" + year + "/validacoes.txt");
+            final String rankingGeradoFolder = pokerPaths.getRankingGeradoFolder();
+            final File file = new File(rankingGeradoFolder + "/" + year + "/validacoes.txt");
 
             final Iterator<Entry<Pessoa, Saldo>> iterator2 = saldoMap.entrySet().iterator();
             while (iterator2.hasNext()) {
@@ -46,7 +55,8 @@ public class Validator {
                 final BigDecimal totalLancado = saldo.getTotalLancado();
 
                 if (saldo.getSaldoAcumulado().compareTo(saldo.getSubTotalLancado()) != 0) {
-                    errorLines.add(key.getNome() + ": sub-total = " + saldo.getSubTotalLancado() + " e deveria ser = " + saldo.getSaldoAcumulado());
+                    errorLines.add(key.getNome() + ": sub-total = " + saldo.getSubTotalLancado() + " e deveria ser = "
+                            + saldo.getSaldoAcumulado());
                 }
 
                 final BigDecimal totalEsperado = saldo.getSaldoAcumulado().add(bonusLancado);
@@ -61,7 +71,7 @@ public class Validator {
             }
 
             if (!file.exists()) {
-                Files.createDirectories(new File(PokerPaths.POKER_RANKING_GERADO_FOLDER + "/" + year).toPath());
+                Files.createDirectories(new File(rankingGeradoFolder + "/" + year).toPath());
                 Files.createFile(file.toPath());
             }
 
@@ -79,11 +89,12 @@ public class Validator {
         }
     }
 
-    public static void validar(final String texto, final String year) {
+    public void validar(final String texto, final String year) {
         try {
-            final File file = new File(PokerPaths.POKER_RANKING_GERADO_FOLDER + "/" + year + "/validacoes.txt");
+            final String rankingGeradoFolder = pokerPaths.getRankingGeradoFolder();
+            final File file = new File(rankingGeradoFolder + "/" + year + "/validacoes.txt");
             if (!file.exists()) {
-                Files.createDirectories(new File(PokerPaths.POKER_RANKING_GERADO_FOLDER + "/" + year).toPath());
+                Files.createDirectories(new File(rankingGeradoFolder + "/" + year).toPath());
                 Files.createFile(file.toPath());
             }
 

@@ -1,23 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-	
 
-	<logger name="com.vaadin.server.communication" level="ERROR" />
-	<logger name="org.springframework" level="ERROR" />
-	<logger name="freemarker.cache" level="ERROR" />
-	<logger name="ch.qos.logback" level="ERROR" />
-	<logger name="bitronix.tm" level="ERROR" />
-	<logger name="com.netflix" level="ERROR" />
-	<logger name="org.apache" level="ERROR" />
-	<logger name="org.apache" level="ERROR" />
-	<logger name="org.jboss" level="ERROR" />
-	<logger name="org.xnio" level="ERROR" />
-	<logger name="/" level="ERROR" />
+	<!--  logger name="org.springframework" level="ERROR" />
+	<logger name="/" level="ERROR" /-->
 	
-	<property name="DEV_HOME" value="c:/poker/log" />
-	
-
-
 	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
 		<encoder>
 			<pattern>%-5level %logger - %msg\n</pattern>
@@ -26,7 +12,7 @@
 	
 	<appender name="FILE-HIBERNATE"
 		class="ch.qos.logback.core.rolling.RollingFileAppender">
-		<file>${DEV_HOME}/sql.log</file>
+		<file>@datasource-path@/log/sql.log</file>
 		<encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
 			<Pattern>
 				%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n
@@ -35,7 +21,7 @@
 
 		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
 			<!-- rollover daily -->
-			<fileNamePattern>${DEV_HOME}/archived/sql.%d{yyyy-MM-dd}.%i.log
+			<fileNamePattern>@datasource-path@/log/archived/sql.%d{yyyy-MM-dd}.%i.log
 			</fileNamePattern>
 			<timeBasedFileNamingAndTriggeringPolicy
 				class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
@@ -47,7 +33,7 @@
 	
 	<appender name="FILE-AUDIT"
 		class="ch.qos.logback.core.rolling.RollingFileAppender">
-		<file>${DEV_HOME}/poker.log</file>
+		<file>@datasource-path@/log/poker.log</file>
 		<encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
 			<Pattern>
 				%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n
@@ -56,7 +42,7 @@
 
 		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
 			<!-- rollover daily -->
-			<fileNamePattern>${DEV_HOME}/archived/poker.%d{yyyy-MM-dd}.%i.log
+			<fileNamePattern>@datasource-path@/log/archived/poker.%d{yyyy-MM-dd}.%i.log
 			</fileNamePattern>
 			<timeBasedFileNamingAndTriggeringPolicy
 				class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
@@ -68,7 +54,7 @@
 
 	<appender name="FILE-ERROR"
 		class="ch.qos.logback.core.rolling.RollingFileAppender">
-		<file>${DEV_HOME}/error.log</file>
+		<file>@datasource-path@/log/error.log</file>
 		<encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
 			<Pattern>
 				%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n
@@ -77,7 +63,7 @@
 
 		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
 			<!-- rollover daily -->
-			<fileNamePattern>${DEV_HOME}/archived/error.%d{yyyy-MM-dd}.%i.log
+			<fileNamePattern>@datasource-path@/log/archived/error.%d{yyyy-MM-dd}.%i.log
 			</fileNamePattern>
 			<timeBasedFileNamingAndTriggeringPolicy
 				class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">

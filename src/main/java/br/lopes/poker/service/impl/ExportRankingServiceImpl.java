@@ -39,12 +39,17 @@ public class ExportRankingServiceImpl implements ExportRanking {
     @Autowired
     private RankingService rankingService;
 
+    @Autowired
+    private PokerPaths pokerPaths;
+
     private String getFilename(final RankingType rankingType) {
-        return "Ranking PDS (" + rankingType.getNome() + ") " + LocalDate.now().format(DateTimeFormatter.ofPattern("MM-dd-yyyy")) + ".xlsx";
+        return "Ranking PDS (" + rankingType.getNome() + ") "
+                + LocalDate.now().format(DateTimeFormatter.ofPattern("MM-dd-yyyy")) + ".xlsx";
     }
 
     @Override
-    public void export(final Map<Pessoa, Classificacao> map, final Integer ano, final RankingType rankingType) throws Exception {
+    public void export(final Map<Pessoa, Classificacao> map, final Integer ano, final RankingType rankingType)
+            throws Exception {
         if ((map == null) || map.isEmpty()) {
             return;
         }
@@ -52,7 +57,8 @@ public class ExportRankingServiceImpl implements ExportRanking {
         generateRankingFile(ano, classificacoes, rankingType);
     }
 
-    private void generateRankingFile(final Integer ano, final Collection<? extends Classificacao> classificacoes, final RankingType rankingType) throws IOException, FileNotFoundException {
+    private void generateRankingFile(final Integer ano, final Collection<? extends Classificacao> classificacoes,
+            final RankingType rankingType) throws IOException, FileNotFoundException {
         final Workbook wb = new XSSFWorkbook();
         final Sheet sheet = wb.createSheet(String.valueOf(ano));
 
@@ -63,12 +69,14 @@ public class ExportRankingServiceImpl implements ExportRanking {
         final CellStyle saldoCellStyle = saldoCellStyle(wb);
 
         criaCabecalho(sheet, cabecalhoCellStyle);
-        criaConteudo(sheet, classificacoes, conteudoCellStyle, movimentacaoPositivaCellStyle, movimentacaoNegativaCellStyle, saldoCellStyle);
+        criaConteudo(sheet, classificacoes, conteudoCellStyle, movimentacaoPositivaCellStyle,
+                movimentacaoNegativaCellStyle, saldoCellStyle);
 
         autosizeColumns(sheet);
 
-        final File fileDirectory = new File(PokerPaths.POKER_RANKING_GERADO_FOLDER + "/" + ano + "/");
-        final File file = new File(PokerPaths.POKER_RANKING_GERADO_FOLDER + "/" + ano + "/" + getFilename(rankingType));
+        final String rankingGeradoFolder = pokerPaths.getRankingGeradoFolder();
+        final File fileDirectory = new File(rankingGeradoFolder + "/" + ano + "/");
+        final File file = new File(rankingGeradoFolder + "/" + ano + "/" + getFilename(rankingType));
 
         if (!Files.exists(fileDirectory.toPath())) {
             Files.createDirectories(fileDirectory.toPath());
@@ -158,7 +166,8 @@ public class ExportRankingServiceImpl implements ExportRanking {
         sheet.autoSizeColumn(9);
     }
 
-    private void criaConteudo(final Sheet sheet, final Collection<? extends Classificacao> classificacoes, final CellStyle conteudoCellStyle, final CellStyle movimentacaoPositivaCellStyle,
+    private void criaConteudo(final Sheet sheet, final Collection<? extends Classificacao> classificacoes,
+            final CellStyle conteudoCellStyle, final CellStyle movimentacaoPositivaCellStyle,
             final CellStyle movimentacaoNegativaCellStyle, final CellStyle saldoCellStyle) {
         int linha = 1;
 
@@ -189,7 +198,7 @@ public class ExportRankingServiceImpl implements ExportRanking {
             final Cell codigoCell = row.createCell(PokerPlanilha.COLUNA_CODIGO_INDEX);
             codigoCell.setCellValue(classificacao.getPessoa().getCodigo());
             codigoCell.setCellStyle(conteudoCellStyle);
-            
+
             final Cell saldoCell = row.createCell(PokerPlanilha.COLUNA_PONTUACAO_INDEX);
             saldoCell.setCellValue(classificacao.getSaldo().doubleValue());
             saldoCell.setCellStyle(saldoCellStyle);
@@ -236,7 +245,7 @@ public class ExportRankingServiceImpl implements ExportRanking {
         final Cell codigoCell = row.createCell(PokerPlanilha.COLUNA_CODIGO_INDEX);
         codigoCell.setCellValue(PokerPlanilha.COLUNA_CODIGO);
         codigoCell.setCellStyle(borderCellStyle);
-        
+
         final Cell pontuacaoCell = row.createCell(PokerPlanilha.COLUNA_PONTUACAO_INDEX);
         pontuacaoCell.setCellValue(PokerPlanilha.COLUNA_PONTUACAO);
         pontuacaoCell.setCellStyle(borderCellStyle);

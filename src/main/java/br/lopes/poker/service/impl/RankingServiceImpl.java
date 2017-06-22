@@ -72,4 +72,9 @@ public class RankingServiceImpl implements RankingService {
         return repository.getOne(id);
     }
 
+    @Override
+    public List<Ranking> findAll() {
+        return repository.findAll();
+    }
+
 }

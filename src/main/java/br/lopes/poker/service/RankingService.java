@@ -19,4 +19,6 @@ public interface RankingService {
     void delete(final Ranking ranking);
 
     Ranking findById(final Integer id);
+
+    List<Ranking> findAll();
 }
