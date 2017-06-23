@@ -11,11 +11,11 @@ import br.lopes.poker.domain.Partida;
 
 public interface PartidaRepository extends JpaRepository<Partida, Integer> {
 
-	// Set<Partida> findByData(final LocalDate data);
+    // Set<Partida> findByData(final LocalDate data);
 
-	Set<Partida> findByDataBetween(final Date begin, final Date end);
+    Set<Partida> findByDataBetween(final Date begin, final Date end);
 
-	@EntityGraph(value = "PartidaWithPartidaPessoa", type = EntityGraphType.LOAD)
-	Partida findByData(final Date data);
+    @EntityGraph(value = "PartidaWithPartidaPessoa", type = EntityGraphType.LOAD)
+    Partida findByData(final Date data);
 
 }

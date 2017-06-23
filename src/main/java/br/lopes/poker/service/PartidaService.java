@@ -16,4 +16,8 @@ public interface PartidaService {
     Partida findByData(final Date data);
 
     void delete(final Partida partida);
+
+    List<Partida> findAll();
+
+    Integer delete(final Date data);
 }

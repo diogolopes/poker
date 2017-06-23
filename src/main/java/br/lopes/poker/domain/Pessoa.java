@@ -11,27 +11,25 @@ import javax.persistence.Index;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Entity
 @Table(indexes = { //
-        @Index(name = "idx_pessoa_nome",
-                columnList = "nome"),
-        @Index(name = "idx_pessoa_codigo",
-                columnList = "codigo") } //
+        @Index(name = "idx_pessoa_nome", columnList = "nome"),
+        @Index(name = "idx_pessoa_codigo", columnList = "codigo") } //
 ) //
 public class Pessoa extends AbstractEntity<Integer> {
 
     private static final long serialVersionUID = -3519792787295875731L;
 
-    @Column(nullable = false,
-            unique = true,
-            length = 200)
+    @Column(nullable = false, unique = true, length = 200)
     private String nome;
     private Integer codigo;
     private String email;
     private String telefone;
 
-    @OneToMany(cascade = CascadeType.ALL,
-            mappedBy = "pessoa")
+    @JsonIgnore
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "pessoa")
     private final Set<PartidaPessoa> partidaPessoas = new HashSet<>();
 
     public String getNome() {
@@ -64,8 +62,8 @@ public class Pessoa extends AbstractEntity<Integer> {
 
     public void setCodigo(final Integer codigo) {
         this.codigo = codigo;
-    }    
-    
+    }
+
     public Set<PartidaPessoa> getPartidas() {
         return partidaPessoas;
     }
@@ -110,6 +108,5 @@ public class Pessoa extends AbstractEntity<Integer> {
             return false;
         return true;
     }
-
 
 }

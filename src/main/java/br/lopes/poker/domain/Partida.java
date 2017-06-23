@@ -12,21 +12,20 @@ import javax.persistence.NamedAttributeNode;
 import javax.persistence.NamedEntityGraph;
 import javax.persistence.OneToMany;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Entity
-@NamedEntityGraph(name = "PartidaWithPartidaPessoa",
-        attributeNodes = { @NamedAttributeNode(value = "partidaPessoas") })
+@NamedEntityGraph(name = "PartidaWithPartidaPessoa", attributeNodes = { @NamedAttributeNode(value = "partidaPessoas") })
 public class Partida extends AbstractEntity<Integer> {
 
     private static final long serialVersionUID = -7229048611382540986L;
 
-    @Column(nullable = false,
-            unique = true)
+    @Column(nullable = false, unique = true)
     private Date data;
     private String local;
 
-    @OneToMany(cascade = CascadeType.ALL,
-            mappedBy = "partida",
-            orphanRemoval = true)
+    @JsonIgnore
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "partida", orphanRemoval = true)
     private final Set<PartidaPessoa> partidaPessoas = new HashSet<PartidaPessoa>();
 
     public Date getData() {

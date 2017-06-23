@@ -6,21 +6,22 @@ import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Entity
 public class PartidaPessoa extends AbstractEntity<Integer> {
 
     private static final long serialVersionUID = -1349284861476161506L;
 
+    @JsonIgnore
     @ManyToOne(optional = false)
-    @JoinColumn(name = "partidaId",
-            nullable = false)
+    @JoinColumn(name = "partidaId", nullable = false)
     private Partida partida;
 
     // @ManyToOne(cascade = { CascadeType.MERGE, CascadeType.DETACH,
     // CascadeType.REFRESH, CascadeType.REMOVE },
     @ManyToOne(optional = false)
-    @JoinColumn(name = "pessoaId",
-            nullable = false)
+    @JoinColumn(name = "pessoaId", nullable = false)
     private Pessoa pessoa;
 
     private BigDecimal saldo;
@@ -48,6 +49,14 @@ public class PartidaPessoa extends AbstractEntity<Integer> {
 
     public void setSaldo(final BigDecimal saldo) {
         this.saldo = saldo;
+    }
+
+    public BigDecimal getBonus() {
+        return bonus;
+    }
+
+    public void setBonus(final BigDecimal bonus) {
+        this.bonus = bonus;
     }
 
     @Override
@@ -86,14 +95,6 @@ public class PartidaPessoa extends AbstractEntity<Integer> {
             return false;
         }
         return true;
-    }
-
-    public BigDecimal getBonus() {
-        return bonus;
-    }
-
-    public void setBonus(final BigDecimal bonus) {
-        this.bonus = bonus;
     }
 
 }

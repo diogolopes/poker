@@ -26,7 +26,8 @@ public class PartidaServiceImpl implements PartidaService {
 
     @Override
     public Set<Partida> findByYear(int year) {
-        return repository.findByDataBetween(Dates.localDateToDate(LocalDate.of(year, 1, 1)), Dates.localDateToDate(LocalDate.of(year, 12, 31)));
+        return repository.findByDataBetween(Dates.localDateToDate(LocalDate.of(year, 1, 1)),
+                Dates.localDateToDate(LocalDate.of(year, 12, 31)));
     }
 
     @Override
@@ -44,4 +45,20 @@ public class PartidaServiceImpl implements PartidaService {
         repository.delete(partida);
         repository.flush();
     }
+
+    @Override
+    public List<Partida> findAll() {
+        return repository.findAll();
+    }
+
+    @Override
+    public Integer delete(final Date data) {
+        final Partida partida = repository.findByData(data);
+        if (partida != null) {
+            repository.delete(partida);
+            return partida.getId();
+        }
+        return null;
+    }
+
 }
