@@ -49,6 +49,27 @@ public class ClassificacaoServiceImpl implements ClassificacaoService {
     }
 
     @Override
+    public void generateRankingFileByRankingAndType(final Ranking ranking, final RankingType rankingType)
+            throws Exception {
+        if (ranking == null) {
+            LOGGER.info("Nenhum ranking encontrado....");
+            return;
+        }
+
+        LOGGER.info("Iniciando reclassificacao do ranking de " + ranking.getAno() + " ultima atualização em "
+                + ranking.getDataAtualizacao() + " por " + rankingType.getNome());
+
+        final Map<Pessoa, Classificacao> rankingMap = transformFromRanking(ranking);
+        final Map<Pessoa, Classificacao> treeMap = rankingCriteriaFactory.create(rankingMap, rankingType);
+        treeMap.putAll(rankingMap);
+        updatePosition(treeMap);
+
+        final Ranking save = rankingService.save(transformToRanking(ranking, treeMap));
+        exportRanking.export(save, rankingType);
+
+    }
+
+    @Override
     public void generateRankingFileByPartidasAndType(final Ranking ranking, final Set<Partida> partidas,
             final RankingType rankingType) throws Exception {
         if (ranking == null || partidas.isEmpty()) {
@@ -76,7 +97,7 @@ public class ClassificacaoServiceImpl implements ClassificacaoService {
     }
 
     @Override
-    public void generateRankingFileByType(final Ranking ranking) throws Exception {
+    public void generateRankingFileByRanking(final Ranking ranking) throws Exception {
         if (ranking == null) {
             LOGGER.info("Nenhum ranking encontrado....");
             return;

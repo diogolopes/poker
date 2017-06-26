@@ -1,6 +1,7 @@
 package br.lopes.poker.controller;
 
 import static br.lopes.poker.helper.PokerEnvironment.JSON_CHARSET;
+import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
 
 import java.util.Date;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import br.lopes.poker.domain.Partida;
 import br.lopes.poker.domain.PartidaPessoa;
+import br.lopes.poker.service.ImportPartida;
 import br.lopes.poker.service.PartidaPessoaService;
 import br.lopes.poker.service.PartidaService;
 
@@ -29,9 +31,13 @@ public class PartidaController extends BaseController {
 
     private static final String PARAM_DATE = "data";
     private static final String DATE_PATTERN = "dd-MM-yyyy";
+    private static final String URL_IMPORT = "/import";
 
     @Autowired
     private PartidaService partidaService;
+
+    @Autowired
+    private ImportPartida importPartida;
 
     @Autowired
     private PartidaPessoaService partidaPessoaService;
@@ -59,6 +65,17 @@ public class PartidaController extends BaseController {
         }
 
         return createResponse("Deleted " + data, HttpStatus.OK);
+    }
+
+    @RequestMapping(value = URL_IMPORT, method = GET, produces = JSON_CHARSET)
+    public ResponseEntity<?> importPartida() {
+        try {
+            final List<Partida> partidas = importPartida.importPartidas();
+            return createResponse(partidas);
+
+        } catch (final Exception exception) {
+            return new ResponseEntity<>("Error in import", BAD_REQUEST);
+        }
     }
 
 }

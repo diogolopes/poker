@@ -77,4 +77,14 @@ public class RankingServiceImpl implements RankingService {
         return repository.findAll();
     }
 
+    @Override
+    public Integer delete(final Integer id) {
+        final Ranking ranking = repository.getOne(id);
+        if (ranking != null) {
+            repository.delete(ranking);
+            return ranking.getId();
+        }
+        return null;
+    }
+
 }

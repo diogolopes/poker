@@ -16,9 +16,11 @@ public interface RankingService {
 
     List<Ranking> save(final Collection<Ranking> rankings);
 
-    void delete(final Ranking ranking);
-
     Ranking findById(final Integer id);
 
     List<Ranking> findAll();
+
+    void delete(final Ranking ranking);
+
+    Integer delete(final Integer id);
 }

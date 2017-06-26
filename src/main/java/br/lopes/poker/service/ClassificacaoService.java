@@ -27,8 +27,13 @@ public interface ClassificacaoService {
 
     Map<Pessoa, Classificacao> ranking(final Set<Partida> partidas, final RankingType rankingType);
 
-    void generateRankingFileByPartidasAndType(final Ranking ranking, final Set<Partida> partidas, final RankingType rankingType) throws Exception;
+    void generateRankingFileByRankingAndType(final Ranking ranking, final RankingType rankingType) throws Exception;
+
+    void generateRankingFileByPartidasAndType(final Ranking ranking, final Set<Partida> partidas,
+            final RankingType rankingType) throws Exception;
+
     void generateRankingFileByPartidasAndType(final Ranking ranking, final Set<Partida> partidas) throws Exception;
-    void generateRankingFileByType(final Ranking ranking) throws Exception;
+
+    void generateRankingFileByRanking(final Ranking ranking) throws Exception;
 
 }
