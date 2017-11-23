@@ -35,7 +35,7 @@
         <profile>
             <id>linux</id>
             <properties>
-                <datasource-path>/home/diogo/Dropbox/projetos/poker</datasource-path>
+                <datasource-path>/home/dilopes/Dropbox/projetos/poker</datasource-path>
             </properties>
         </profile>
     </profiles>
