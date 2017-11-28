@@ -34,7 +34,10 @@
         </profile>
         <profile>
             <id>linux</id>
-            <properties>
+		<activation>
+            		<activeByDefault>true</activeByDefault>
+        	</activation>
+	    <properties>
                 <datasource-path>/home/dilopes/Dropbox/projetos/poker</datasource-path>
             </properties>
         </profile>
