@@ -178,9 +178,10 @@ public class ImportPartidaImpl implements ImportPartida {
 
 					if (cell.getCellType() == Cell.CELL_TYPE_STRING) {
 						final String valorCelulaDataPartida = cell.getStringCellValue().trim().toUpperCase();
-						final String[] subTotalString = { "SUB-TOTAL", "SUB TOTAL", "S-TOTAL", "S.TOTAL", "S. TOTAL" };
+						final String[] subTotalString = { "SUB-TOTAL", "SUB TOTAL", "S-TOTAL", "S.TOTAL", "S. TOTAL",
+								"S TOTAL", "STOTAL" };
 						final String[] bonusString = { "BONUS", "BÔNUS" };
-						
+
 						if (containsStringInArray(valorCelulaDataPartida, subTotalString)) {
 							subTotalIndex = cell.getColumnIndex();
 							continue;
