@@ -12,7 +12,8 @@ public class EnvironmentProperties {
     private String datasourcePath;
 
     public String getDatasourcePath() {
-        return datasourcePath;
+    	final String home = System.getProperty("user.home");
+    	return datasourcePath.replace("~", home);
     }
 
     public void setDatasourcePath(String datasourcePath) {
