@@ -1,4 +1,4 @@
-package br.lopes.poker.service;
+package br.lopes.poker.service.sheet;
 
 import java.util.List;
 

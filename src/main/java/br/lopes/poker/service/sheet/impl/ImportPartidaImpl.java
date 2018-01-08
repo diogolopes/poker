@@ -1,4 +1,4 @@
-package br.lopes.poker.service.impl;
+package br.lopes.poker.service.sheet.impl;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -42,7 +42,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import br.lopes.poker.data.Saldo;
+import br.lopes.poker.data.AcumuladorValor;
 import br.lopes.poker.domain.Partida;
 import br.lopes.poker.domain.Pessoa;
 import br.lopes.poker.exception.PokerException;
@@ -50,9 +50,9 @@ import br.lopes.poker.helper.Dates;
 import br.lopes.poker.helper.PokerPaths;
 import br.lopes.poker.helper.Sheets;
 import br.lopes.poker.helper.Validator;
-import br.lopes.poker.service.ImportPartida;
 import br.lopes.poker.service.PartidaService;
 import br.lopes.poker.service.PessoaService;
+import br.lopes.poker.service.sheet.ImportPartida;
 
 @Service
 public class ImportPartidaImpl implements ImportPartida {
@@ -167,9 +167,14 @@ public class ImportPartidaImpl implements ImportPartida {
 	private Set<Partida> getPartidas(final String year, final Sheet sheet) throws PokerException {
 		final Set<Partida> partidas = new HashSet<Partida>();
 		final Map<Integer, Partida> partidaMap = new HashMap<>();
-		final Map<Pessoa, Saldo> saldoMap = new HashMap<>();
+		final Map<Pessoa, AcumuladorValor> saldoMap = new HashMap<>();
+		
+		int codigoIndex = -1, participanteIndex = -1, totalSaldoIndex = -1, totalPontosIndex = -1;
 
-		int subTotalIndex = -1, bonusIndex = -1, totalIndex = -1, codigoIndex = -1, participanteIndex = -1;
+		final String[] codigoString = { "CÓDIGO", "CODIGO" };
+		final String[] participanteString = { "PARTICIPANTE" };
+		final String[] totalString = { "TOTAL" };
+		final String[] totalAcumuladoString = { "TOTAL-C", "TOTALC", "TOTAL C", "TOTAL.C" };
 
 		boolean header = true;
 		for (final Row row : sheet) {
@@ -178,37 +183,31 @@ public class ImportPartidaImpl implements ImportPartida {
 
 					if (cell.getCellType() == Cell.CELL_TYPE_STRING) {
 						final String valorCelulaDataPartida = cell.getStringCellValue().trim().toUpperCase();
-						final String[] subTotalString = { "SUB-TOTAL", "SUB TOTAL", "S-TOTAL", "S.TOTAL", "S. TOTAL",
-								"S TOTAL", "STOTAL" };
-						final String[] bonusString = { "BONUS", "BÔNUS" };
 
-						if (containsStringInArray(valorCelulaDataPartida, subTotalString)) {
-							subTotalIndex = cell.getColumnIndex();
-							continue;
-						}
-
-						if (containsStringInArray(valorCelulaDataPartida, bonusString)) {
-							bonusIndex = cell.getColumnIndex();
-							continue;
-						}
-
-						if (valorCelulaDataPartida.equalsIgnoreCase("TOTAL")) {
-							totalIndex = cell.getColumnIndex();
-							continue;
-						}
-
-						if (valorCelulaDataPartida.equalsIgnoreCase("CÓDIGO")
-								|| valorCelulaDataPartida.equalsIgnoreCase("CODIGO")) {
+						if (containsStringInArray(valorCelulaDataPartida, codigoString)) {
 							codigoIndex = cell.getColumnIndex();
 							continue;
 						}
 
-						if (valorCelulaDataPartida.equalsIgnoreCase("PARTICIPANTE")) {
+						if (containsStringInArray(valorCelulaDataPartida, participanteString)) {
 							participanteIndex = cell.getColumnIndex();
 							continue;
 						}
 
+						if (containsStringInArray(valorCelulaDataPartida, totalString)) {
+							totalSaldoIndex = cell.getColumnIndex();
+							continue;
+						}
+
+						if (containsStringInArray(valorCelulaDataPartida, totalAcumuladoString)) {
+							totalPontosIndex = cell.getColumnIndex();
+							continue;
+						}
+
 						try {
+							if (org.apache.commons.lang3.StringUtils.isAlphaSpace(valorCelulaDataPartida)) {
+							   continue;
+							}
 							final int tamanhoCampoData = valorCelulaDataPartida.trim().length();
 							final LocalDate partidaDate;
 							if (tamanhoCampoData == 8) {
@@ -242,7 +241,10 @@ public class ImportPartidaImpl implements ImportPartida {
 				header = false;
 				continue;
 			}
-
+			
+			final BigDecimal totalSaldo = Sheets.getBigDecimalValue(row.getCell(totalSaldoIndex));
+			final Integer totalPontos = Sheets.getIntegerValue(row.getCell(totalPontosIndex));
+			
 			final Iterator<Entry<Integer, Partida>> iterator = partidaMap.entrySet().iterator();
 			while (iterator.hasNext()) {
 				final Entry<Integer, Partida> entry = iterator.next();
@@ -259,17 +261,14 @@ public class ImportPartidaImpl implements ImportPartida {
 				final Pessoa pessoa = getPessoa(codigo, nome, partida);
 
 				final BigDecimal saldo = Sheets.getBigDecimalValue(row.getCell(column));
+				final int pontos = Sheets.getIntegerValue(row.getCell(column + 1));
 
-				if (saldo != null) {
-					final BigDecimal bonus = Sheets.getBigDecimalValue(row.getCell(bonusIndex));
-					updateSaldoPessoa(pessoa, saldoMap, saldo, row.getCell(subTotalIndex), bonus,
-							row.getCell(totalIndex));
-					partida.addPessoa(pessoa, saldo, BigDecimal.ONE);
-				}
+				adicionarValorAcumuladoItemPartida(pessoa, saldoMap, saldo, pontos, totalSaldo, totalPontos);
 
+				partida.addPessoa(pessoa, saldo, pontos);
 			}
-
 		}
+		
 		if (!playerCreatedSet.isEmpty()) {
 			for (final PlayerCreated playerValidator : playerCreatedSet) {
 				validator.validar("Jogador novo encontrado: " + playerValidator.getNome()
@@ -309,18 +308,15 @@ public class ImportPartidaImpl implements ImportPartida {
 		partidas.add(partida);
 	}
 
-	private void updateSaldoPessoa(final Pessoa pessoa, final Map<Pessoa, Saldo> saldoMap, final BigDecimal saldo,
-			final Cell subTotalCell, final BigDecimal bonus, final Cell totalCell) {
-		Saldo saldoAcumulado = saldoMap.get(pessoa);
-		if (saldoAcumulado == null) {
-			saldoAcumulado = new Saldo();
-			saldoAcumulado.setSubTotalLancado(Sheets.getBigDecimalValue(subTotalCell));
-			saldoAcumulado.setBonusLancado(bonus);
-			saldoAcumulado.setTotalLancado(Sheets.getBigDecimalValue(totalCell));
-			saldoMap.put(pessoa, saldoAcumulado);
+	private void adicionarValorAcumuladoItemPartida(final Pessoa pessoa, final Map<Pessoa, AcumuladorValor> saldoMap,
+			final BigDecimal saldo, final int pontos, final BigDecimal totalSaldo, final int totalPontos) {
+		AcumuladorValor acumuladorValor = saldoMap.get(pessoa);
+		if (acumuladorValor == null) {
+			acumuladorValor = new AcumuladorValor(totalSaldo, totalPontos);
+			saldoMap.put(pessoa, acumuladorValor);
 		}
-		saldoAcumulado.addSaldoAcumulado(saldo);
-
+		acumuladorValor.addSaldoAcumulado(saldo);
+		acumuladorValor.addPontoAcumulado(pontos);
 	}
 
 	private Pessoa getPessoa(final Integer codigo, final String nome, final Partida partida) {

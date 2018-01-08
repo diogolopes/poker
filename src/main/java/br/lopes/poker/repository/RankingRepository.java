@@ -5,13 +5,12 @@ import org.springframework.data.jpa.repository.EntityGraph.EntityGraphType;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import br.lopes.poker.domain.Ranking;
-import br.lopes.poker.service.ClassificacaoService.RankingType;
+import br.lopes.poker.domain.RankingType;
 
 public interface RankingRepository extends JpaRepository<Ranking, Integer> {
 
-    Ranking findFirstByAnoAndRankingTypeOrderByDataAtualizacaoDesc(final Integer ano, final RankingType rankingType);
+	Ranking findFirstByAnoAndRankingTypeOrderByDataAtualizacaoDesc(final Integer ano, final RankingType rankingType);
 
-    @EntityGraph(value = "RankingWithColocacao",
-            type = EntityGraphType.LOAD)
-    Ranking getOne(final Integer id);
+	@EntityGraph(value = "RankingWithItemRanking", type = EntityGraphType.LOAD)
+	Ranking getOne(final Integer id);
 }

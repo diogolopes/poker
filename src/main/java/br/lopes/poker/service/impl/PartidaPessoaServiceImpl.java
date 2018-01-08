@@ -6,22 +6,22 @@ import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import br.lopes.poker.domain.PartidaPessoa;
-import br.lopes.poker.repository.PartidaPessoaRepository;
-import br.lopes.poker.service.PartidaPessoaService;
+import br.lopes.poker.domain.ItemPartida;
+import br.lopes.poker.repository.ItemPartidaRepository;
+import br.lopes.poker.service.ItemPartidaService;
 
 @Service
-public class PartidaPessoaServiceImpl implements PartidaPessoaService {
+public class PartidaPessoaServiceImpl implements ItemPartidaService {
 
-    private final PartidaPessoaRepository repository;
+    private final ItemPartidaRepository repository;
 
     @Autowired
-    public PartidaPessoaServiceImpl(final PartidaPessoaRepository repository) {
+    public PartidaPessoaServiceImpl(final ItemPartidaRepository repository) {
         this.repository = repository;
     }
 
     @Override
-    public Set<PartidaPessoa> findByPartidaData(Date data) {
+    public Set<ItemPartida> findByPartidaData(Date data) {
         return repository.findByPartidaData(data);
     }
 

@@ -19,7 +19,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import br.lopes.poker.data.Saldo;
+import br.lopes.poker.data.AcumuladorValor;
 import br.lopes.poker.domain.Pessoa;
 
 @Component
@@ -40,30 +40,29 @@ public class Validator {
         }
     }
 
-    public void validarSaldo(final String year, final Map<Pessoa, Saldo> saldoMap) {
+    public void validarSaldo(final String year, final Map<Pessoa, AcumuladorValor> saldoMap) {
         try {
             final List<String> errorLines = new ArrayList<>();
             final String rankingGeradoFolder = pokerPaths.getRankingGeradoFolder();
             final File file = new File(rankingGeradoFolder + "/" + year + "/validacoes.txt");
 
-            final Iterator<Entry<Pessoa, Saldo>> iterator2 = saldoMap.entrySet().iterator();
-            while (iterator2.hasNext()) {
-                final Entry<Pessoa, Saldo> entry2 = iterator2.next();
-                final Pessoa key = entry2.getKey();
-                final Saldo saldo = entry2.getValue();
-                final BigDecimal bonusLancado = saldo.getBonusLancado();
-                final BigDecimal totalLancado = saldo.getTotalLancado();
-
-                if (saldo.getSaldoAcumulado().compareTo(saldo.getSubTotalLancado()) != 0) {
-                    errorLines.add(key.getNome() + ": sub-total = " + saldo.getSubTotalLancado() + " e deveria ser = "
+            final Iterator<Entry<Pessoa, AcumuladorValor>> iterator = saldoMap.entrySet().iterator();
+            while (iterator.hasNext()) {
+                final Entry<Pessoa, AcumuladorValor> pesoaEntry = iterator.next();
+                final Pessoa key = pesoaEntry.getKey();
+                final AcumuladorValor saldo = pesoaEntry.getValue();
+                final BigDecimal saldoTotal = saldo.getSaldoTotal();
+                final int pontoTotal = saldo.getPontoTotal();
+                
+                if (saldo.getSaldoAcumulado().compareTo(saldoTotal) != 0) {
+                    errorLines.add(key.getNome() + ": saldoTotal = " + saldoTotal + " e deveria ser = "
                             + saldo.getSaldoAcumulado());
                 }
-
-                final BigDecimal totalEsperado = saldo.getSaldoAcumulado().add(bonusLancado);
-                if (totalEsperado.compareTo(totalLancado) != 0) {
-                    errorLines.add(key.getNome() + ": total = " + totalLancado + " e deveria ser = " + totalEsperado);
+                
+                if (saldo.getPontoAcumulado() != pontoTotal) {
+                    errorLines.add(key.getNome() + ": pontoTotal = " + pontoTotal + " e deveria ser = "
+                            + saldo.getPontoAcumulado());
                 }
-
             }
 
             if (errorLines.isEmpty()) {

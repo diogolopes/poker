@@ -15,7 +15,7 @@ import javax.persistence.OneToMany;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
-@NamedEntityGraph(name = "PartidaWithPartidaPessoa", attributeNodes = { @NamedAttributeNode(value = "partidaPessoas") })
+@NamedEntityGraph(name = "PartidaWithItemPartidas", attributeNodes = { @NamedAttributeNode(value = "itemPartidas") })
 public class Partida extends AbstractEntity<Integer> {
 
     private static final long serialVersionUID = -7229048611382540986L;
@@ -26,7 +26,7 @@ public class Partida extends AbstractEntity<Integer> {
 
     @JsonIgnore
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "partida", orphanRemoval = true)
-    private final Set<PartidaPessoa> partidaPessoas = new HashSet<PartidaPessoa>();
+    private final Set<ItemPartida> itemPartidas = new HashSet<ItemPartida>();
 
     public Date getData() {
         return data;
@@ -44,24 +44,24 @@ public class Partida extends AbstractEntity<Integer> {
         this.local = local;
     }
 
-    public Set<PartidaPessoa> getPartidaPessoas() {
-        return partidaPessoas;
+    public Set<ItemPartida> getItemPartidas() {
+        return itemPartidas;
     }
 
-    public void addPessoa(final PartidaPessoa... partidaPessoas) {
-        for (final PartidaPessoa partidaPessoa : partidaPessoas) {
-            this.partidaPessoas.add(partidaPessoa);
+    public void addPessoa(final ItemPartida... partidaPessoas) {
+        for (final ItemPartida partidaPessoa : partidaPessoas) {
+            this.itemPartidas.add(partidaPessoa);
         }
     }
 
-    public void addPessoa(final Pessoa pessoa, final BigDecimal saldo, final BigDecimal bonus) {
-        final PartidaPessoa partidaPessoa = new PartidaPessoa();
-        partidaPessoa.setPartida(this);
-        partidaPessoa.setPessoa(pessoa);
-        partidaPessoa.setBonus(bonus);
-        partidaPessoa.setSaldo(saldo);
+    public void addPessoa(final Pessoa pessoa, final BigDecimal saldo, int pontuacao) {
+        final ItemPartida itemPartida = new ItemPartida();
+        itemPartida.setPartida(this);
+        itemPartida.setPessoa(pessoa);
+        itemPartida.setSaldo(saldo);
+        itemPartida.setPontos(pontuacao);
 
-        this.partidaPessoas.add(partidaPessoa);
+        this.itemPartidas.add(itemPartida);
     }
 
     @Override

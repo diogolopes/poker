@@ -19,13 +19,13 @@ public class Sheets {
             final String stringCellValue = cell.getStringCellValue().trim();
             if (StringUtils.isEmpty(stringCellValue)
                     || !org.apache.commons.lang3.math.NumberUtils.isNumber(stringCellValue)) {
-                return null;
+            	return Integer.valueOf(0);
             } else {
                 return Integer.valueOf(stringCellValue);
             }
         }
     }
-
+    
     public static BigDecimal getBigDecimalValue(final Cell cell) {
         if (cell == null) {
             return null;
@@ -40,7 +40,7 @@ public class Sheets {
             saldoString = saldoString.replace("O", "0");
 
             if (saldoString.equals("-") || saldoString.equals("")) {
-                return null;
+                return BigDecimal.ZERO;
             } else {
                 return new BigDecimal(saldoString);
             }
