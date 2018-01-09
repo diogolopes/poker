@@ -8,6 +8,7 @@ public interface PokerPlanilha {
     public static final String COLUNA_CODIGO = "Código";
     public static final String COLUNA_PONTUACAO = "Pontuação";
     public static final String COLUNA_JOGOS = "Jogos";
+    public static final String COLUNA_SALDO = "Saldo";
     
     public static final int COLUNA_COLOCACAO_INDEX = 0;
     public static final int COLUNA_MOVIMENTACA_INDEX = 1;
@@ -15,5 +16,6 @@ public interface PokerPlanilha {
     public static final int COLUNA_CODIGO_INDEX = 3;
     public static final int COLUNA_PONTUACAO_INDEX = 4;
     public static final int COLUNA_JOGOS_INDEX = 5;
+    public static final int COLUNA_SALDO_INDEX = 6;
 
 }

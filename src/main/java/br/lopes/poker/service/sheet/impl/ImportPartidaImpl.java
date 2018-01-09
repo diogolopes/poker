@@ -168,7 +168,7 @@ public class ImportPartidaImpl implements ImportPartida {
 		final Set<Partida> partidas = new HashSet<Partida>();
 		final Map<Integer, Partida> partidaMap = new HashMap<>();
 		final Map<Pessoa, AcumuladorValor> saldoMap = new HashMap<>();
-		
+
 		int codigoIndex = -1, participanteIndex = -1, totalSaldoIndex = -1, totalPontosIndex = -1;
 
 		final String[] codigoString = { "CÓDIGO", "CODIGO" };
@@ -206,7 +206,7 @@ public class ImportPartidaImpl implements ImportPartida {
 
 						try {
 							if (org.apache.commons.lang3.StringUtils.isAlphaSpace(valorCelulaDataPartida)) {
-							   continue;
+								continue;
 							}
 							final int tamanhoCampoData = valorCelulaDataPartida.trim().length();
 							final LocalDate partidaDate;
@@ -241,10 +241,10 @@ public class ImportPartidaImpl implements ImportPartida {
 				header = false;
 				continue;
 			}
-			
+
 			final BigDecimal totalSaldo = Sheets.getBigDecimalValue(row.getCell(totalSaldoIndex));
 			final Integer totalPontos = Sheets.getIntegerValue(row.getCell(totalPontosIndex));
-			
+
 			final Iterator<Entry<Integer, Partida>> iterator = partidaMap.entrySet().iterator();
 			while (iterator.hasNext()) {
 				final Entry<Integer, Partida> entry = iterator.next();
@@ -252,7 +252,8 @@ public class ImportPartidaImpl implements ImportPartida {
 				final Partida partida = entry.getValue();
 
 				if (row.getCell(participanteIndex) == null
-						|| StringUtils.isEmpty(row.getCell(participanteIndex).getStringCellValue())) {
+						|| StringUtils.isEmpty(row.getCell(participanteIndex).getStringCellValue())
+						|| Sheets.isIgnoreValue(row.getCell(column))) {
 					break;
 				}
 
@@ -268,7 +269,7 @@ public class ImportPartidaImpl implements ImportPartida {
 				partida.addPessoa(pessoa, saldo, pontos);
 			}
 		}
-		
+
 		if (!playerCreatedSet.isEmpty()) {
 			for (final PlayerCreated playerValidator : playerCreatedSet) {
 				validator.validar("Jogador novo encontrado: " + playerValidator.getNome()

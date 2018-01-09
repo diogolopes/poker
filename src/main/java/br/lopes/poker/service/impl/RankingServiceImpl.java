@@ -51,13 +51,14 @@ public class RankingServiceImpl implements RankingService {
 		clonedRanking.setRankingType(ranking.getRankingType());
 
 		ranking.getItemRankings().stream().forEach(c -> {
-			final ItemRanking colocacao = new ItemRanking();
-			colocacao.setPessoa(c.getPessoa());
-			colocacao.setSaldo(c.getSaldo());
-			colocacao.setJogos(c.getJogos());
-			colocacao.setPosicaoAtual(c.getPosicaoAtual());
-			colocacao.setPosicaoAnterior(c.getPosicaoAnterior());
-			clonedRanking.addColocacao(colocacao);
+			final ItemRanking itemRanking = new ItemRanking();
+			itemRanking.setPessoa(c.getPessoa());
+			itemRanking.setSaldo(c.getSaldo());
+			itemRanking.setJogos(c.getJogos());
+			itemRanking.setPosicaoAtual(c.getPosicaoAtual());
+			itemRanking.setPosicaoAnterior(c.getPosicaoAnterior());
+			itemRanking.setPontos(c.getPontos());
+			clonedRanking.addColocacao(itemRanking);
 		});
 
 		return repository.save(clonedRanking);

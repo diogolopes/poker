@@ -12,6 +12,7 @@ public class ExportedItemRanking {
 	private int movimentacao;
 	private int posicaoAnterior;
 	private int posicaoAtual;
+	// private int pontos;
 
 	public ExportedItemRanking(final ItemRanking itemRanking) {
 		this.itemRanking = itemRanking;
@@ -19,6 +20,9 @@ public class ExportedItemRanking {
 		this.movimentacao = (itemRanking.getPosicaoAnterior() != 0)
 				? (itemRanking.getPosicaoAnterior() - itemRanking.getPosicaoAtual())
 				: 0;
+		this.posicaoAtual = itemRanking.getPosicaoAtual();
+		this.posicaoAnterior = itemRanking.getPosicaoAnterior();
+		// this.pontos = itemRanking.getPontos();
 	}
 
 	public ExportedItemRanking(final ItemPartida itemPartida) {
@@ -46,6 +50,7 @@ public class ExportedItemRanking {
 	}
 
 	public int getPontos() {
+		// return this.pontos;
 		return itemRanking.getPontos();
 	}
 

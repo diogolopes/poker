@@ -8,7 +8,6 @@ import java.nio.file.Files;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -200,13 +199,17 @@ public class ExportRankingServiceImpl implements ExportRankingService {
 			codigoCell.setCellValue(classificacao.getCodigoPessoa());
 			codigoCell.setCellStyle(conteudoCellStyle);
 
-			final Cell saldoCell = row.createCell(PokerPlanilha.COLUNA_PONTUACAO_INDEX);
-			saldoCell.setCellValue(classificacao.getPontos());
-			saldoCell.setCellStyle(conteudoCellStyle);
+			final Cell pontosCell = row.createCell(PokerPlanilha.COLUNA_PONTUACAO_INDEX);
+			pontosCell.setCellValue(classificacao.getPontos());
+			pontosCell.setCellStyle(conteudoCellStyle);
 
 			final Cell jogosCell = row.createCell(PokerPlanilha.COLUNA_JOGOS_INDEX);
 			jogosCell.setCellValue(classificacao.getJogos());
 			jogosCell.setCellStyle(conteudoCellStyle);
+
+			final Cell saldoCell = row.createCell(PokerPlanilha.COLUNA_SALDO_INDEX);
+			saldoCell.setCellValue(classificacao.getSaldo().doubleValue());
+			saldoCell.setCellStyle(saldoCellStyle);
 
 		}
 
@@ -238,6 +241,10 @@ public class ExportRankingServiceImpl implements ExportRankingService {
 		final Cell jogosCell = row.createCell(PokerPlanilha.COLUNA_JOGOS_INDEX);
 		jogosCell.setCellValue(PokerPlanilha.COLUNA_JOGOS);
 		jogosCell.setCellStyle(borderCellStyle);
+
+		final Cell saldoCell = row.createCell(PokerPlanilha.COLUNA_SALDO_INDEX);
+		saldoCell.setCellValue(PokerPlanilha.COLUNA_SALDO);
+		saldoCell.setCellStyle(borderCellStyle);
 	}
 
 	@Override

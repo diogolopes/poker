@@ -92,7 +92,7 @@ public class ClassificacaoServiceImpl implements ClassificacaoService {
 		treeMap.putAll(rankingMap);
 		updatePosition(treeMap);
 
-		final Ranking save = rankingService.save(transformToRanking(ranking,treeMap));
+		final Ranking save = rankingService.save(transformToRanking(ranking, treeMap));
 		exportRanking.export(save, rankingType);
 	}
 
@@ -159,17 +159,12 @@ public class ClassificacaoServiceImpl implements ClassificacaoService {
 		final Iterator<Entry<Pessoa, ExportedItemRanking>> iterator = sortedByCriteriaMap.entrySet().iterator();
 
 		int posicao = 1;
-		int pontosAnterior = -1;
 
 		while (iterator.hasNext()) {
 			final Entry<Pessoa, ExportedItemRanking> entry = iterator.next();
 			final ExportedItemRanking value = entry.getValue();
-			final int pontos = value.getPontos();
 			value.setPosicao(posicao);
-			if (pontosAnterior != pontos) {
-				pontosAnterior = pontos;
-				posicao++;
-			}
+			posicao++;
 			System.out.println(value);
 		}
 		System.out.println("");
