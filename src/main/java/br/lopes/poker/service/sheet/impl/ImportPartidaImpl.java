@@ -250,11 +250,12 @@ public class ImportPartidaImpl implements ImportPartida {
 				final Entry<Integer, Partida> entry = iterator.next();
 				final Integer column = entry.getKey();
 				final Partida partida = entry.getValue();
-
+				
+				//Se não tiver informações na partida
 				if (row.getCell(participanteIndex) == null
 						|| StringUtils.isEmpty(row.getCell(participanteIndex).getStringCellValue())
 						|| Sheets.isIgnoreValue(row.getCell(column))) {
-					break;
+					continue;
 				}
 
 				final Integer codigo = Sheets.getIntegerValue(row.getCell(codigoIndex));
