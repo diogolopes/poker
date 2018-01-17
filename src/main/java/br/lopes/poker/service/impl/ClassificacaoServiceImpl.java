@@ -111,7 +111,7 @@ public class ClassificacaoServiceImpl implements ClassificacaoService {
 				rankingType);
 		sortedByCriteriaMap.putAll(exportedtemRanking);
 		updatePosition(sortedByCriteriaMap);
-		exportRanking.export(sortedByCriteriaMap, ranking.getAno(), rankingType);
+		exportRanking.export(sortedByCriteriaMap, ranking);
 	}
 
 	private Ranking transformToRanking(final Ranking ranking,

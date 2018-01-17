@@ -9,8 +9,7 @@ import br.lopes.poker.domain.RankingType;
 
 public interface ExportRankingService {
 
-	void export(final Map<Pessoa, ExportedItemRanking> exportedItemRankingMap, final Integer ano,
-			final RankingType rankingType) throws Exception;
+	void export(final Map<Pessoa, ExportedItemRanking> exportedItemRankingMap, final Ranking ranking) throws Exception;
 
 	void export(final Ranking ranking) throws Exception;
 

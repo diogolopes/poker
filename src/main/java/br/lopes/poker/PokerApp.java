@@ -59,14 +59,15 @@ public class PokerApp {
 						final Ranking ranking = optionalMaxRaking.get();
 						classificacaoService.generateRankingFileByPartidasAndType(ranking, new HashSet<>(partidas));
 					} else {
-						final int ano = Dates.dateToLocalDate(partidaMax.get().getData()).getYear();
+						final Date dataUltimaPartida = partidaMax.get().getData();
+						final int ano = Dates.dateToLocalDate(dataUltimaPartida).getYear();
 						Ranking lastRankingBySaldo = rankingService.findByAno(ano, RankingType.PONTUACAO);
 						if (lastRankingBySaldo == null) {
 							lastRankingBySaldo = new Ranking();
 
 							final Ranking newYearRanking = new Ranking();
 							newYearRanking.setAno(ano);
-							newYearRanking.setDataAtualizacao(new Date());
+							newYearRanking.setDataAtualizacao(dataUltimaPartida);
 							newYearRanking.setRankingType(RankingType.PONTUACAO);
 
 							classificacaoService.generateRankingFileByPartidasAndType(
@@ -74,6 +75,7 @@ public class PokerApp {
 									RankingType.PONTUACAO);
 						} else {
 							final Ranking rankingBySaldo = rankingService.clone(lastRankingBySaldo);
+							rankingBySaldo.setDataAtualizacao(dataUltimaPartida);
 							classificacaoService.generateRankingFileByPartidasAndType(rankingBySaldo,
 									new HashSet<>(partidas), RankingType.PONTUACAO);
 						}

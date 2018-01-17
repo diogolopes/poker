@@ -5,8 +5,6 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -20,6 +18,7 @@ import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -30,6 +29,7 @@ import br.lopes.poker.domain.ItemRanking;
 import br.lopes.poker.domain.Pessoa;
 import br.lopes.poker.domain.Ranking;
 import br.lopes.poker.domain.RankingType;
+import br.lopes.poker.helper.Dates;
 import br.lopes.poker.helper.PokerPaths;
 import br.lopes.poker.helper.PokerPlanilha;
 import br.lopes.poker.service.RankingService;
@@ -44,9 +44,8 @@ public class ExportRankingServiceImpl implements ExportRankingService {
 	@Autowired
 	private PokerPaths pokerPaths;
 
-	private String getFilename(final RankingType rankingType) {
-		return "Ranking PDS (" + rankingType.getNome() + ") "
-				+ LocalDate.now().format(DateTimeFormatter.ofPattern("MM-dd-yyyy")) + ".xlsx";
+	private String getFilename(final Ranking ranking) {
+		return "Ranking PDS (" + ranking.getRankingType().getNome() + ") " + Dates.format(ranking.getDataAtualizacao(), "MM-dd-yyyy") + ".xlsx";
 	}
 
 	private Collection<ExportedItemRanking> fromItemRanking(final Collection<ItemRanking> itemRanking) {
@@ -56,10 +55,10 @@ public class ExportRankingServiceImpl implements ExportRankingService {
 
 	}
 
-	private void generateRankingFile(final Integer ano, final Collection<ExportedItemRanking> exportedtemRanking,
-			final RankingType rankingType) throws IOException, FileNotFoundException {
+	private void generateRankingFile(final Ranking ranking, final Collection<ExportedItemRanking> exportedtemRanking)
+			throws IOException, FileNotFoundException {
 		final Workbook wb = new XSSFWorkbook();
-		final Sheet sheet = wb.createSheet(String.valueOf(ano));
+		final Sheet sheet = wb.createSheet(String.valueOf(ranking.getAno()));
 
 		final CellStyle cabecalhoCellStyle = cabecalhoCellStyle(wb);
 		final CellStyle conteudoCellStyle = conteudoCellStyle(wb);
@@ -67,15 +66,15 @@ public class ExportRankingServiceImpl implements ExportRankingService {
 		final CellStyle movimentacaoNegativaCellStyle = movimentacaoNegativaCellStyle(wb);
 		final CellStyle saldoCellStyle = saldoCellStyle(wb);
 
-		criaCabecalho(sheet, rankingType, cabecalhoCellStyle);
-		criaConteudo(sheet, exportedtemRanking, rankingType, conteudoCellStyle, movimentacaoPositivaCellStyle,
+		criaCabecalho(sheet, ranking, cabecalhoCellStyle);
+		criaConteudo(sheet, exportedtemRanking, ranking, conteudoCellStyle, movimentacaoPositivaCellStyle,
 				movimentacaoNegativaCellStyle, saldoCellStyle);
 
 		autosizeColumns(sheet);
-
+		final Integer ano = ranking.getAno();
 		final String rankingGeradoFolder = pokerPaths.getRankingGeradoFolder();
 		final File fileDirectory = new File(rankingGeradoFolder + "/" + ano + "/");
-		final File file = new File(rankingGeradoFolder + "/" + ano + "/" + getFilename(rankingType));
+		final File file = new File(rankingGeradoFolder + "/" + ano + "/" + getFilename(ranking));
 
 		if (!Files.exists(fileDirectory.toPath())) {
 			Files.createDirectories(fileDirectory.toPath());
@@ -166,10 +165,9 @@ public class ExportRankingServiceImpl implements ExportRankingService {
 	}
 
 	private void criaConteudo(final Sheet sheet, final Collection<ExportedItemRanking> exportedtemRankings,
-			final RankingType rankingType, final CellStyle conteudoCellStyle,
-			final CellStyle movimentacaoPositivaCellStyle, final CellStyle movimentacaoNegativaCellStyle,
-			final CellStyle saldoCellStyle) {
-		int linha = 1;
+			final Ranking ranking, final CellStyle conteudoCellStyle, final CellStyle movimentacaoPositivaCellStyle,
+			final CellStyle movimentacaoNegativaCellStyle, final CellStyle saldoCellStyle) {
+		int linha = 2;
 
 		final Iterator<ExportedItemRanking> iterator = exportedtemRankings.iterator();
 		while (iterator.hasNext()) {
@@ -215,34 +213,41 @@ public class ExportRankingServiceImpl implements ExportRankingService {
 
 	}
 
-	private void criaCabecalho(final Sheet sheet, final RankingType rankingType, final CellStyle borderCellStyle) {
-		final Row row = sheet.createRow(0);
+	private void criaCabecalho(final Sheet sheet, final Ranking ranking, final CellStyle borderCellStyle) {
+		final Row infoRow = sheet.createRow(0);
+		final Row headerRow = sheet.createRow(1);
 
-		final Cell colocacaoCell = row.createCell(PokerPlanilha.COLUNA_COLOCACAO_INDEX);
+		sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, PokerPlanilha.COLUNA_SALDO_INDEX));
+
+		final Cell infoCell = infoRow.createCell(0);
+		
+		infoCell.setCellValue("Atualizado em " + Dates.formatPtBr(ranking.getDataAtualizacao()));
+
+		final Cell colocacaoCell = headerRow.createCell(PokerPlanilha.COLUNA_COLOCACAO_INDEX);
 		colocacaoCell.setCellValue(PokerPlanilha.COLUNA_COLOCACAO);
 		colocacaoCell.setCellStyle(borderCellStyle);
 
-		final Cell movimentacaoCell = row.createCell(PokerPlanilha.COLUNA_MOVIMENTACA_INDEX);
+		final Cell movimentacaoCell = headerRow.createCell(PokerPlanilha.COLUNA_MOVIMENTACA_INDEX);
 		movimentacaoCell.setCellValue(PokerPlanilha.COLUNA_MOVIMENTACAO);
 		movimentacaoCell.setCellStyle(borderCellStyle);
 
-		final Cell nomeCell = row.createCell(PokerPlanilha.COLUNA_NOME_INDEX);
+		final Cell nomeCell = headerRow.createCell(PokerPlanilha.COLUNA_NOME_INDEX);
 		nomeCell.setCellValue(PokerPlanilha.COLUNA_NOME);
 		nomeCell.setCellStyle(borderCellStyle);
 
-		final Cell codigoCell = row.createCell(PokerPlanilha.COLUNA_CODIGO_INDEX);
+		final Cell codigoCell = headerRow.createCell(PokerPlanilha.COLUNA_CODIGO_INDEX);
 		codigoCell.setCellValue(PokerPlanilha.COLUNA_CODIGO);
 		codigoCell.setCellStyle(borderCellStyle);
 
-		final Cell pontuacaoCell = row.createCell(PokerPlanilha.COLUNA_PONTUACAO_INDEX);
+		final Cell pontuacaoCell = headerRow.createCell(PokerPlanilha.COLUNA_PONTUACAO_INDEX);
 		pontuacaoCell.setCellValue(PokerPlanilha.COLUNA_PONTUACAO);
 		pontuacaoCell.setCellStyle(borderCellStyle);
 
-		final Cell jogosCell = row.createCell(PokerPlanilha.COLUNA_JOGOS_INDEX);
+		final Cell jogosCell = headerRow.createCell(PokerPlanilha.COLUNA_JOGOS_INDEX);
 		jogosCell.setCellValue(PokerPlanilha.COLUNA_JOGOS);
 		jogosCell.setCellStyle(borderCellStyle);
 
-		final Cell saldoCell = row.createCell(PokerPlanilha.COLUNA_SALDO_INDEX);
+		final Cell saldoCell = headerRow.createCell(PokerPlanilha.COLUNA_SALDO_INDEX);
 		saldoCell.setCellValue(PokerPlanilha.COLUNA_SALDO);
 		saldoCell.setCellStyle(borderCellStyle);
 	}
@@ -264,19 +269,19 @@ public class ExportRankingServiceImpl implements ExportRankingService {
 		if (classificacoes.isEmpty()) {
 			return;
 		}
-		generateRankingFile(ranking.getAno(), fromItemRanking(classificacoes), rankingType);
+		generateRankingFile(ranking, fromItemRanking(classificacoes));
 
 	}
 
 	@Override
-	public void export(Map<Pessoa, ExportedItemRanking> exportedItemRankingMap, Integer ano, RankingType rankingType)
+	public void export(final Map<Pessoa, ExportedItemRanking> exportedItemRankingMap, final Ranking ranking)
 			throws Exception {
 
 		if ((exportedItemRankingMap == null) || exportedItemRankingMap.isEmpty()) {
 			return;
 		}
 		final Collection<ExportedItemRanking> exportedtemRankings = exportedItemRankingMap.values();
-		generateRankingFile(ano, exportedtemRankings, rankingType);
+		generateRankingFile(ranking, exportedtemRankings);
 
 	}
 

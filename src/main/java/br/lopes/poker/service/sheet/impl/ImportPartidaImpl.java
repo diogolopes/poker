@@ -174,7 +174,7 @@ public class ImportPartidaImpl implements ImportPartida {
 		final String[] codigoString = { "CÓDIGO", "CODIGO" };
 		final String[] participanteString = { "PARTICIPANTE" };
 		final String[] totalString = { "TOTAL" };
-		final String[] totalAcumuladoString = { "TOTAL-C", "TOTALC", "TOTAL C", "TOTAL.C" };
+		final String[] totalAcumuladoString = { "TOTAL-C", "TOTALC", "TOTAL C", "TOTAL.C", "TOTAL-P" };
 
 		boolean header = true;
 		for (final Row row : sheet) {
