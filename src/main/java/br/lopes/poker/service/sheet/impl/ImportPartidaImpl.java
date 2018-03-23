@@ -104,7 +104,7 @@ public class ImportPartidaImpl implements ImportPartida {
 			});
 
 		} catch (final IOException exception) {
-			LOGGER.error("ErroIOException", exception);
+			LOGGER.error("Erro IOException", exception);
 			throw new PokerException("Error in createPartidasFromFile", exception);
 		}
 		return files;
@@ -167,7 +167,7 @@ public class ImportPartidaImpl implements ImportPartida {
 	private Set<Partida> getPartidas(final String year, final Sheet sheet) throws PokerException {
 		final Set<Partida> partidas = new HashSet<Partida>();
 		final Map<Integer, Partida> partidaMap = new HashMap<>();
-		final Map<Pessoa, AcumuladorValor> saldoMap = new HashMap<>();
+		final Map<Pessoa, AcumuladorValor> acumuladorValor = new HashMap<>();
 
 		int codigoIndex = -1, participanteIndex = -1, totalSaldoIndex = -1, totalPontosIndex = -1;
 
@@ -265,7 +265,7 @@ public class ImportPartidaImpl implements ImportPartida {
 				final BigDecimal saldo = Sheets.getBigDecimalValue(row.getCell(column));
 				final int pontos = Sheets.getIntegerValue(row.getCell(column + 1));
 
-				adicionarValorAcumuladoItemPartida(pessoa, saldoMap, saldo, pontos, totalSaldo, totalPontos);
+				adicionarValorAcumuladoItemPartida(pessoa, partida, acumuladorValor, saldo, pontos, totalSaldo, totalPontos);
 
 				partida.addPessoa(pessoa, saldo, pontos);
 			}
@@ -279,7 +279,8 @@ public class ImportPartidaImpl implements ImportPartida {
 			}
 		}
 
-		validator.validarSaldo(year, saldoMap);
+		validator.validarSaldo(year, acumuladorValor);
+		validator.validarPontos(partidas, year);
 		return partidas;
 	}
 
@@ -310,7 +311,7 @@ public class ImportPartidaImpl implements ImportPartida {
 		partidas.add(partida);
 	}
 
-	private void adicionarValorAcumuladoItemPartida(final Pessoa pessoa, final Map<Pessoa, AcumuladorValor> saldoMap,
+	private void adicionarValorAcumuladoItemPartida(final Pessoa pessoa, final Partida partida, final Map<Pessoa, AcumuladorValor> saldoMap,
 			final BigDecimal saldo, final int pontos, final BigDecimal totalSaldo, final int totalPontos) {
 		AcumuladorValor acumuladorValor = saldoMap.get(pessoa);
 		if (acumuladorValor == null) {
@@ -319,6 +320,7 @@ public class ImportPartidaImpl implements ImportPartida {
 		}
 		acumuladorValor.addSaldoAcumulado(saldo);
 		acumuladorValor.addPontoAcumulado(pontos);
+		acumuladorValor.addPartidaPonto(partida,pontos);
 	}
 
 	private Pessoa getPessoa(final Integer codigo, final String nome, final Partida partida) {

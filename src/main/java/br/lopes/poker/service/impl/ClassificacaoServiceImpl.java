@@ -1,13 +1,11 @@
 package br.lopes.poker.service.impl;
 
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.TreeMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +21,7 @@ import br.lopes.poker.domain.Ranking;
 import br.lopes.poker.domain.RankingType;
 import br.lopes.poker.helper.Dates;
 import br.lopes.poker.helper.Validator;
+import br.lopes.poker.helper.ranking.RankingCriteriaFactory;
 import br.lopes.poker.service.RankingService;
 import br.lopes.poker.service.sheet.ClassificacaoService;
 import br.lopes.poker.service.sheet.ExportRankingService;
@@ -208,49 +207,6 @@ public class ClassificacaoServiceImpl implements ClassificacaoService {
 			rankingMap.put(itemPartida.getPessoa(), classificacao);
 		}
 		return classificacao;
-	}
-
-	public class RankingCriteriaFactory {
-
-		public Map<Pessoa, ExportedItemRanking> create(final Map<Pessoa, ExportedItemRanking> exportedtemRanking,
-				final RankingType rankingType) {
-			switch (rankingType) {
-			case PONTUACAO:
-				return new TreeMap<Pessoa, ExportedItemRanking>(new RankingByPontuacaoComparator(exportedtemRanking));
-			default:
-				throw new IllegalArgumentException("Ranking type invalid");
-			}
-		}
-	}
-
-	public class RankingByPontuacaoComparator implements Comparator<Pessoa> {
-		private final Map<Pessoa, ExportedItemRanking> base;
-
-		public RankingByPontuacaoComparator(final Map<Pessoa, ExportedItemRanking> base) {
-			this.base = base;
-		}
-
-		public int compare(final Pessoa a, final Pessoa b) {
-			final ExportedItemRanking classificacaoJogador1 = base.get(a);
-			final ExportedItemRanking classificacaoJogador2 = base.get(b);
-
-			final Integer pontosJogador1 = Integer.valueOf(classificacaoJogador1.getPontos());
-			final Integer pontosJogador2 = Integer.valueOf(classificacaoJogador2.getPontos());
-
-			int compareTo = pontosJogador2.compareTo(pontosJogador1);
-			if (compareTo == 0) {
-				compareTo = classificacaoJogador2.getSaldo().compareTo(classificacaoJogador1.getSaldo());
-				if (compareTo == 0) {
-					compareTo = classificacaoJogador1.getCodigoPessoa()
-							.compareTo(classificacaoJogador2.getCodigoPessoa());
-					if (compareTo == 0) {
-						compareTo = classificacaoJogador1.getNomePessoa()
-								.compareTo(classificacaoJogador2.getNomePessoa());
-					}
-				}
-			}
-			return compareTo;
-		}
 	}
 
 }

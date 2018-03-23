@@ -23,4 +23,6 @@ public interface RankingService {
 	void delete(final Ranking ranking);
 
 	Integer delete(final Integer id);
+
+	Ranking findLastByAno(final int ano);
 }

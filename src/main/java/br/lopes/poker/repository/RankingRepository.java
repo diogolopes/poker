@@ -11,6 +11,9 @@ public interface RankingRepository extends JpaRepository<Ranking, Integer> {
 
 	Ranking findFirstByAnoAndRankingTypeOrderByDataAtualizacaoDesc(final Integer ano, final RankingType rankingType);
 
+	Ranking findLastByAnoOrderByDataAtualizacaoDesc(final int ano);
+	
 	@EntityGraph(value = "RankingWithItemRanking", type = EntityGraphType.LOAD)
 	Ranking getOne(final Integer id);
+
 }

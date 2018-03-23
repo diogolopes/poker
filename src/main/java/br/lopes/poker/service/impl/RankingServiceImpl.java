@@ -27,6 +27,11 @@ public class RankingServiceImpl implements RankingService {
 	public Ranking findByAno(final int ano, final RankingType rankingType) {
 		return repository.findFirstByAnoAndRankingTypeOrderByDataAtualizacaoDesc(ano, rankingType);
 	}
+	
+	@Override
+	public Ranking findLastByAno(final int ano) {
+		return repository.findLastByAnoOrderByDataAtualizacaoDesc(ano);
+	}
 
 	@Override
 	public Ranking save(final Ranking ranking) {

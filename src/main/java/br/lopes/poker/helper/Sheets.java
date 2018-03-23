@@ -52,7 +52,6 @@ public class Sheets {
 			final String value = cell.getStringCellValue();
 			return org.apache.commons.lang3.StringUtils.isEmpty(value) || "-".equals(value.trim());
 		} else {
-			double numericCellValue = cell.getNumericCellValue();
 			return false;
 		}
 	}
