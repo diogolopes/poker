@@ -173,12 +173,16 @@ public class ImportPartidaImpl implements ImportPartida {
 
 		final String[] codigoString = { "CÓDIGO", "CODIGO" };
 		final String[] participanteString = { "PARTICIPANTE" };
-		final String[] totalString = { "TOTAL", "TOTAL V" };
-		final String[] totalAcumuladoString = { "TOTAL-C", "TOTALC", "TOTAL C", "TOTAL.C", "TOTAL-P", "TOTAL P" };
+		final String[] totalString = { "TOTAL", "TOTAL V", "GERAL $", "TOTAL R$" };
+		final String[] totalAcumuladoString = { "TOTAL-C", "TOTALC", "TOTAL C", "TOTAL.C", "TOTAL-P", "TOTAL P", "GERAL P" };
 
 		boolean header = true;
 		for (final Row row : sheet) {
 			if (header) {
+				
+				final int totalPontosColumn = row.getLastCellNum()-1;
+				final int totalSaldoColumn = row.getLastCellNum()-2;
+				
 				for (final Cell cell : row) {
 
 					if (cell.getCellType() == Cell.CELL_TYPE_STRING) {
@@ -194,16 +198,16 @@ public class ImportPartidaImpl implements ImportPartida {
 							continue;
 						}
 
-						if (containsStringInArray(valorCelulaDataPartida, totalString)) {
+						if (containsStringInArray(valorCelulaDataPartida, totalString) || cell.getColumnIndex() == totalSaldoColumn) {
 							totalSaldoIndex = cell.getColumnIndex();
 							continue;
 						}
 
-						if (containsStringInArray(valorCelulaDataPartida, totalAcumuladoString)) {
+						if (containsStringInArray(valorCelulaDataPartida, totalAcumuladoString) || cell.getColumnIndex() == totalPontosColumn) {
 							totalPontosIndex = cell.getColumnIndex();
 							continue;
 						}
-
+						
 						try {
 							if (org.apache.commons.lang3.StringUtils.isAlphaSpace(valorCelulaDataPartida)) {
 								continue;
