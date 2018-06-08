@@ -3,9 +3,11 @@ package br.lopes.poker.helper;
 import java.math.BigDecimal;
 
 import org.apache.poi.ss.usermodel.Cell;
+import org.slf4j.Logger;
 import org.springframework.util.StringUtils;
 
 public class Sheets {
+	private static final Logger LOGGER = org.slf4j.LoggerFactory.getLogger(Sheets.class);
 
 	public static Integer getIntegerValue(final Cell cell) {
 		if (cell == null) {
@@ -33,17 +35,24 @@ public class Sheets {
 		if (cell.getCellType() == Cell.CELL_TYPE_NUMERIC) {
 			return BigDecimal.valueOf(cell.getNumericCellValue());
 		} else {
-			String saldoString = cell.getStringCellValue();
-			saldoString = saldoString.trim();
-			saldoString = saldoString.replace(",", ".");
-			saldoString = saldoString.replace("+", "");
-			saldoString = saldoString.replace("O", "0");
 
-			if (saldoString.equals("-") || saldoString.equals("")) {
-				return BigDecimal.ZERO;
-			} else {
-				return new BigDecimal(saldoString);
+			try {
+				String saldoString = cell.getStringCellValue();
+				saldoString = saldoString.trim();
+				saldoString = saldoString.replace(",", ".");
+				saldoString = saldoString.replace("+", "");
+				saldoString = saldoString.replace("O", "0");
+
+				if (saldoString.equals("-") || saldoString.equals("")) {
+					return BigDecimal.ZERO;
+				} else {
+					return new BigDecimal(saldoString);
+				}
+			} catch (final NumberFormatException ne) {
+				LOGGER.error("Erro ao tentar converter o valor [" + cell.getStringCellValue() + "] para númerico.");
+				throw ne;
 			}
+
 		}
 	}
 

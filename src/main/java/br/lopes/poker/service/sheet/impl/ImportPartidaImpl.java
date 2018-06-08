@@ -198,12 +198,12 @@ public class ImportPartidaImpl implements ImportPartida {
 							continue;
 						}
 
-						if (containsStringInArray(valorCelulaDataPartida, totalString) || cell.getColumnIndex() == totalSaldoColumn) {
+						if ((totalSaldoIndex == -1) && (containsStringInArray(valorCelulaDataPartida, totalString) || cell.getColumnIndex() == totalSaldoColumn)) {
 							totalSaldoIndex = cell.getColumnIndex();
 							continue;
 						}
 
-						if (containsStringInArray(valorCelulaDataPartida, totalAcumuladoString) || cell.getColumnIndex() == totalPontosColumn) {
+						if ((totalPontosIndex == -1) && (containsStringInArray(valorCelulaDataPartida, totalAcumuladoString) || cell.getColumnIndex() == totalPontosColumn)) {
 							totalPontosIndex = cell.getColumnIndex();
 							continue;
 						}
