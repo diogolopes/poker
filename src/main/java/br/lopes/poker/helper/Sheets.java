@@ -56,10 +56,18 @@ public class Sheets {
 		}
 	}
 
+	
 	public static boolean isIgnoreValue(final Cell cell) {
+	    if (cell == null || cell.getCellType() == Cell.CELL_TYPE_BLANK) {
+	        return true;
+	    }
 		if (cell.getCellType() == Cell.CELL_TYPE_STRING) {
 			final String value = cell.getStringCellValue();
+			if (value.isEmpty()) {
+				return true;
+			}
 			return org.apache.commons.lang3.StringUtils.isEmpty(value) || "-".equals(value.trim());
+		
 		} else {
 			return false;
 		}
