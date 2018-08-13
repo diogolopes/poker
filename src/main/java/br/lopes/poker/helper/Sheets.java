@@ -14,7 +14,7 @@ public class Sheets {
 			return null;
 		}
 
-		if (cell.getCellType() == Cell.CELL_TYPE_NUMERIC) {
+		if ((cell.getCellType() == Cell.CELL_TYPE_NUMERIC) || (cell.getCellType() == Cell.CELL_TYPE_FORMULA)){
 			final double numericCellValue = cell.getNumericCellValue();
 			return Double.valueOf(numericCellValue).intValue();
 		} else {
@@ -32,7 +32,7 @@ public class Sheets {
 		if (cell == null) {
 			return null;
 		}
-		if (cell.getCellType() == Cell.CELL_TYPE_NUMERIC) {
+		if ((cell.getCellType() == Cell.CELL_TYPE_NUMERIC) || (cell.getCellType() == Cell.CELL_TYPE_FORMULA)){
 			return BigDecimal.valueOf(cell.getNumericCellValue());
 		} else {
 
