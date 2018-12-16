@@ -4,23 +4,25 @@ import java.util.Collection;
 import java.util.List;
 
 import br.lopes.poker.domain.Ranking;
-import br.lopes.poker.service.ClassificacaoService.RankingType;
+import br.lopes.poker.domain.RankingType;
 
 public interface RankingService {
 
-    Ranking findByAno(final int ano, final RankingType rankingType);
+	Ranking findByAno(final int ano, final RankingType rankingType);
 
-    Ranking save(final Ranking ranking);
+	Ranking save(final Ranking ranking);
 
-    Ranking clone(final Ranking ranking);
+	Ranking clone(final Ranking ranking);
 
-    List<Ranking> save(final Collection<Ranking> rankings);
+	List<Ranking> save(final Collection<Ranking> rankings);
 
-    Ranking findById(final Integer id);
+	Ranking findById(final Integer id);
 
-    List<Ranking> findAll();
+	List<Ranking> findAll();
 
-    void delete(final Ranking ranking);
+	void delete(final Ranking ranking);
 
-    Integer delete(final Integer id);
+	Integer delete(final Integer id);
+
+	Ranking findLastByAno(final int ano);
 }

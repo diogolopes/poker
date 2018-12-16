@@ -30,7 +30,7 @@ public class Pessoa extends AbstractEntity<Integer> {
 
     @JsonIgnore
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "pessoa")
-    private final Set<PartidaPessoa> partidaPessoas = new HashSet<>();
+    private final Set<ItemPartida> itemPartidas = new HashSet<>();
 
     public String getNome() {
         return nome;
@@ -64,24 +64,24 @@ public class Pessoa extends AbstractEntity<Integer> {
         this.codigo = codigo;
     }
 
-    public Set<PartidaPessoa> getPartidas() {
-        return partidaPessoas;
+    public Set<ItemPartida> getItemPartidas() {
+        return itemPartidas;
     }
 
-    public void addPartida(final PartidaPessoa... partidaPessoas) {
-        for (final PartidaPessoa partidaPessoa : partidaPessoas) {
-            this.partidaPessoas.add(partidaPessoa);
+    public void addPartida(final ItemPartida... itemPartidas) {
+        for (final ItemPartida itemPartida : itemPartidas) {
+            this.itemPartidas.add(itemPartida);
         }
     }
 
-    public void addPartida(final Partida partida, final BigDecimal saldo, final BigDecimal bonus) {
-        final PartidaPessoa partidaPessoa = new PartidaPessoa();
-        partidaPessoa.setPartida(partida);
-        partidaPessoa.setPessoa(this);
-        partidaPessoa.setBonus(bonus);
-        partidaPessoa.setSaldo(saldo);
+    public void addPartida(final Partida partida, final BigDecimal saldo, final int pontos) {
+        final ItemPartida itemPartida = new ItemPartida();
+        itemPartida.setPartida(partida);
+        itemPartida.setPessoa(this);
+        itemPartida.setSaldo(saldo);
+        itemPartida.setPontos(pontos);
 
-        this.partidaPessoas.add(partidaPessoa);
+        this.itemPartidas.add(itemPartida);
     }
 
     @Override

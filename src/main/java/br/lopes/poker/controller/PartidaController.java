@@ -20,10 +20,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import br.lopes.poker.domain.Partida;
-import br.lopes.poker.domain.PartidaPessoa;
-import br.lopes.poker.service.ImportPartida;
-import br.lopes.poker.service.PartidaPessoaService;
+import br.lopes.poker.domain.ItemPartida;
+import br.lopes.poker.service.ItemPartidaService;
 import br.lopes.poker.service.PartidaService;
+import br.lopes.poker.service.sheet.ImportPartida;
 
 @RestController
 @RequestMapping("/partidas")
@@ -40,7 +40,7 @@ public class PartidaController extends BaseController {
     private ImportPartida importPartida;
 
     @Autowired
-    private PartidaPessoaService partidaPessoaService;
+    private ItemPartidaService partidaPessoaService;
 
     @RequestMapping(method = GET, produces = JSON_CHARSET)
     public ResponseEntity<List<Partida>> getPartidas() {
@@ -50,7 +50,7 @@ public class PartidaController extends BaseController {
     }
 
     @RequestMapping(method = GET, produces = JSON_CHARSET, params = PARAM_DATE)
-    public ResponseEntity<Set<PartidaPessoa>> getPartidasByData(
+    public ResponseEntity<Set<ItemPartida>> getPartidasByData(
             @RequestParam(PARAM_DATE) @DateTimeFormat(pattern = DATE_PATTERN) @NotBlank final Date data) {
 
         return createResponse(partidaPessoaService.findByPartidaData(data));

@@ -12,7 +12,7 @@
 	
 	<appender name="FILE-HIBERNATE"
 		class="ch.qos.logback.core.rolling.RollingFileAppender">
-		<file>@datasource-path@/log/sql.log</file>
+		<file>${user.home}/log/sql.log</file>
 		<encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
 			<Pattern>
 				%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n
@@ -21,7 +21,7 @@
 
 		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
 			<!-- rollover daily -->
-			<fileNamePattern>@datasource-path@/log/archived/sql.%d{yyyy-MM-dd}.%i.log
+			<fileNamePattern>${user.home}/log/archived/sql.%d{yyyy-MM-dd}.%i.log
 			</fileNamePattern>
 			<timeBasedFileNamingAndTriggeringPolicy
 				class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
@@ -33,7 +33,7 @@
 	
 	<appender name="FILE-AUDIT"
 		class="ch.qos.logback.core.rolling.RollingFileAppender">
-		<file>@datasource-path@/log/poker.log</file>
+		<file>${user.home}/log/poker.log</file>
 		<encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
 			<Pattern>
 				%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n
@@ -42,7 +42,7 @@
 
 		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
 			<!-- rollover daily -->
-			<fileNamePattern>@datasource-path@/log/archived/poker.%d{yyyy-MM-dd}.%i.log
+			<fileNamePattern>${user.home}/log/archived/poker.%d{yyyy-MM-dd}.%i.log
 			</fileNamePattern>
 			<timeBasedFileNamingAndTriggeringPolicy
 				class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
@@ -54,7 +54,7 @@
 
 	<appender name="FILE-ERROR"
 		class="ch.qos.logback.core.rolling.RollingFileAppender">
-		<file>@datasource-path@/log/error.log</file>
+		<file>${user.home}/log/error.log</file>
 		<encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
 			<Pattern>
 				%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n
@@ -63,7 +63,7 @@
 
 		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
 			<!-- rollover daily -->
-			<fileNamePattern>@datasource-path@/log/archived/error.%d{yyyy-MM-dd}.%i.log
+			<fileNamePattern>${user.home}/log/archived/error.%d{yyyy-MM-dd}.%i.log
 			</fileNamePattern>
 			<timeBasedFileNamingAndTriggeringPolicy
 				class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
@@ -84,6 +84,7 @@
 
 	<logger name="br.lopes.poker" level="ERROR" additivity="false">
 		<appender-ref ref="FILE-ERROR" />
+		<appender-ref ref="STDOUT" />
 	</logger>
 
 	<root level="INFO">
